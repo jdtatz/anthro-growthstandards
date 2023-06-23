@@ -1,0 +1,7 @@
+{
+    "_ARRAY_DIMENSIONS": [
+        "sex",
+        "length"
+    ],
+    "coordinates": "sex_enum"
+}
