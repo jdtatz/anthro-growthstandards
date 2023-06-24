@@ -191,6 +191,13 @@ def approx_bcs_stats(
 
 
 class _BCS_gen(stats.rv_continuous):
+    """
+    Family of Box-Cox Symmetric Distributions
+
+    References
+    ----------
+    [Box-Cox symmetric distributions and applications to nutritional data](https://arxiv.org/pdf/1604.02221.pdf)
+    """
     _distr: stats.rv_continuous
 
     def __init__(self, *args, **kwargs):
@@ -317,6 +324,13 @@ BCCG = BCCG_gen(name="BCCG")
 
 
 class BCPE_gen(_BCS_gen):
+    """
+    Box–Cox Power Exponential distribution
+
+    References
+    ----------
+    [Smooth centile curves for skew and kurtotic data modelled using the Box–Cox power exponential distribution](https://doi.org/10.1002/sim.1861)
+    """
     _distr = stats.gennorm
 
     def _scale_normalizer(self, beta):
