@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "growthstandards"
+requires-python = ">=3.9"
+dependencies = [
+    "numpy",
+    "scipy",
+    "numba",
+    "xarray",
+    "xarray-einstats",
+    "zarr",
+]
+dynamic = ["version"]
+
+[project.optional-dependencies]
+tfp = ["tensorflow_probability[jax]"]
+
+[tool.setuptools]
+zip-safe = false
