@@ -1,3 +1,4 @@
+import importlib.resources
 from collections.abc import Mapping
 from functools import lru_cache
 from itertools import chain
@@ -8,8 +9,9 @@ import scipy.optimize as optimize
 import scipy.stats as stats
 import xarray as xr
 import xarray_einstats.stats as xr_stats
+import zarr
 
-from bcs_ext.scipy_ext import BCCG
+from .bcs_ext.scipy_ext import BCCG
 
 try:
     if not hasattr(xr_stats.XrRV, "median"):
@@ -157,9 +159,9 @@ GROWTHSTANDARD_NAMES = (*GROWTHSTANDARD_KEYS, "len_hei", "bmi", "gfl", "gfh")
 @lru_cache
 def load_growthstandard_ds(g: str) -> xr.Dataset:
     if g in GROWTHSTANDARD_KEYS:
-        return xr.open_zarr(
-            store="growthstandards.zarr", group=g, decode_times=False
-        ).load()
+        traversable = importlib.resources.files(__package__)
+        store = zarr.DirectoryStore(traversable.joinpath("growthstandards.zarr"))
+        return xr.open_zarr(store=store, group=g, decode_times=False).load()
     elif g == "len_hei":
         return xr.combine_by_coords(
             [load_growthstandard_ds("length"), load_growthstandard_ds("height")],
