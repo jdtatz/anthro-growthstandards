@@ -1,12 +1,14 @@
-from functools import cached_property, partial
+from functools import cached_property, partial, wraps
 from itertools import chain
-from typing import Hashable, Optional, Sequence, Union
+from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, Union
 
 import numpy as np
 import scipy.optimize as optimize
 import scipy.special as sc
 import scipy.stats as stats
 import xarray as xr
+import xarray.core.types as xr_types
+import xarray.core.utils as xr_utils
 import xarray_einstats.stats as xr_stats
 
 try:
@@ -26,14 +28,22 @@ def rv_to_ds(rv: xr_stats.XrRV):
     )
 
 
-def ds_to_rv(distr: stats.rv_continuous, ds: xr.Dataset):
+def ds_to_rv(
+    distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset
+) -> xr_stats.XrRV:
     args = [ds[s.name] for s in distr._shape_info()]
     if "loc" in ds:
         args.append(ds["loc"])
     if "scale" in ds:
         args.append(ds["scale"])
-    rv = xr_stats.XrContinuousRV(distr, *args)
-    # rv = xr_stats.XrContinuousRV(distr, **ds.items())
+    if isinstance(distr, stats.rv_discrete):
+        rv = xr_stats.XrDiscreteRV(distr, *args)
+        # rv = xr_stats.XrDiscreteRV(distr, **dict(ds.items()))
+    elif isinstance(distr, stats.rv_continuous):
+        rv = xr_stats.XrContinuousRV(distr, *args)
+        # rv = xr_stats.XrContinuousRV(distr, **dict(ds.items()))
+    else:
+        raise TypeError(distr)
     rv.attrs = ds.attrs
     return rv
 
@@ -48,6 +58,17 @@ def rv_coords(rv: xr_stats.XrRV) -> xr.Dataset:
         compat="broadcast_equals",
         combine_attrs="drop_conflicts",
     )
+
+
+def map_rv_ds(
+    rv: xr_stats.XrRV, map_ds: Callable[[xr.Dataset], xr.Dataset]
+) -> xr_stats.XrRV:
+    kls = type(rv)
+    ds = rv_to_ds(rv)
+    ds = map_ds(ds)
+    mapped_rv = kls(rv.dist, **dict(ds.items()))
+    mapped_rv.attrs = ds.attrs
+    return mapped_rv
 
 
 def log_trapz(log_y, x=None, dx=1.0, axis=-1):
@@ -230,3 +251,114 @@ class XrCompoundRV:
     def logsf(self, x: Union[float, xr.DataArray]):
         logsf_x: xr.DataArray = self.cond_rv.logsf(x)
         return xr_log_integrate(logsf_x + self.logp_marginal, self.coord)
+
+
+@wraps(xr.Dataset.isel)
+def rv_isel(
+    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    /,
+    indexers: Optional[Mapping[Any, Any]] = None,
+    drop: bool = False,
+    missing_dims="raise",
+    **indexers_kwargs: Any,
+):
+    indexers = xr_utils.either_dict_or_kwargs(indexers, indexers_kwargs, "isel")
+    kwargs = dict(drop=drop, missing_dims=missing_dims)
+    if isinstance(rv, XrCompoundRV):
+        if rv.coord in indexers:
+            raise ValueError("Marginal coordinate can't be modified")
+        cond_ds = rv_to_ds(rv.cond_rv)
+        marginal_ds = rv_to_ds(rv.marginal_rv)
+        dims = set(cond_ds.dims) | set(marginal_ds.dims)
+        indexers = xr_utils.drop_dims_from_indexers(indexers, dims, missing_dims)
+        cond_indexers = xr_utils.drop_dims_from_indexers(
+            indexers, cond_ds.dims, "ignore"
+        )
+        marginal_indexers = xr_utils.drop_dims_from_indexers(
+            indexers, marginal_ds.dims, "ignore"
+        )
+        cond_rv = map_rv_ds(rv.cond_rv, lambda ds: ds.isel(cond_indexers, **kwargs))
+        marginal_rv = map_rv_ds(
+            rv.marginal_rv, lambda ds: ds.isel(marginal_indexers, **kwargs)
+        )
+        return XrCompoundRV(cond_rv, marginal_rv, rv.coord)
+    else:
+        return map_rv_ds(rv, lambda ds: ds.isel(indexers, **kwargs))
+
+
+@wraps(xr.Dataset.sel)
+def rv_sel(
+    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    /,
+    indexers: Optional[Mapping[Any, Any]] = None,
+    method: xr_types.ReindexMethodOptions = None,
+    tolerance: Optional[int | float | Iterable[int | float]] = None,
+    drop: bool = False,
+    **indexers_kwargs: Any,
+):
+    indexers = xr_utils.either_dict_or_kwargs(indexers, indexers_kwargs, "sel")
+    kwargs = dict(method=method, tolerance=tolerance, drop=drop)
+    if isinstance(rv, XrCompoundRV):
+        if rv.coord in indexers:
+            raise ValueError("Marginal coordinate can't be modified")
+        cond_ds = rv_to_ds(rv.cond_rv)
+        marginal_ds = rv_to_ds(rv.marginal_rv)
+        dims = set(cond_ds.dims) | set(marginal_ds.dims)
+        indexers = xr_utils.drop_dims_from_indexers(indexers, dims, "raise")
+        cond_indexers = xr_utils.drop_dims_from_indexers(
+            indexers, cond_ds.dims, "ignore"
+        )
+        marginal_indexers = xr_utils.drop_dims_from_indexers(
+            indexers, marginal_ds.dims, "ignore"
+        )
+        cond_rv = map_rv_ds(rv.cond_rv, lambda ds: ds.sel(cond_indexers, **kwargs))
+        marginal_rv = map_rv_ds(
+            rv.marginal_rv, lambda ds: ds.sel(marginal_indexers, **kwargs)
+        )
+        return XrCompoundRV(cond_rv, marginal_rv, rv.coord)
+    else:
+        return map_rv_ds(rv, lambda ds: ds.sel(indexers, **kwargs))
+
+
+@wraps(xr.Dataset.interp)
+def rv_interp(
+    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    /,
+    coords: Optional[Mapping[Any, Any]] = None,
+    method: xr_types.InterpOptions = "linear",
+    assume_sorted: bool = False,
+    kwargs: Optional[Mapping[str, Any]] = None,
+    method_non_numeric: xr_types.ReindexMethodOptions = "nearest",
+    **coords_kwargs: Any,
+):
+    coords = xr_utils.either_dict_or_kwargs(coords, coords_kwargs, "interp")
+    interp_kwargs = dict(
+        method=method,
+        assume_sorted=assume_sorted,
+        kwargs=kwargs,
+        method_non_numeric=method_non_numeric,
+    )
+    if isinstance(rv, XrCompoundRV):
+        if rv.coord in coords:
+            raise ValueError("Marginal coordinate can't be modified")
+        cond_ds = rv_to_ds(rv.cond_rv)
+        marginal_ds = rv_to_ds(rv.marginal_rv)
+        all_coords = set(cond_ds.coords) | set(marginal_ds.coords)
+
+        invalid = set(coords.keys()) - all_coords
+        if invalid:
+            raise ValueError(
+                f"Coordinates {invalid} do not exist. Expected one or more of {all_coords}"
+            )
+
+        cond_coords = {k: v for k, v in coords.items() if k in cond_ds.coords}
+        marginal_coords = {k: v for k, v in coords.items() if k in marginal_ds.coords}
+        cond_rv = map_rv_ds(
+            rv.cond_rv, lambda ds: ds.interp(cond_coords, **interp_kwargs)
+        )
+        marginal_rv = map_rv_ds(
+            rv.marginal_rv, lambda ds: ds.interp(marginal_coords, **interp_kwargs)
+        )
+        return XrCompoundRV(cond_rv, marginal_rv, rv.coord)
+    else:
+        return map_rv_ds(rv, lambda ds: ds.interp(coords, **interp_kwargs))
