@@ -48,8 +48,56 @@ def rv_coords(rv: xr_stats.XrRV) -> xr.Dataset:
     )
 
 
-# TODO: Once tanh-sinh quadrature is added to scipy, add the compound_log* functions,
-#  which allows evaluating the log of the integral based on the log of the integrand
+def _vectorized_root_scalar(f, x0, bracket, fprime):
+    x_min, x_max = bracket
+    # return optimize._chandrupatla(f, x_min, x_max)
+    # need scipy 1.12 for _chandrupatla
+    # see https://github.com/scipy/scipy/issues/7242 for stabilization progress
+    return np.clip(optimize.newton(f, x0, fprime=fprime), x_min, x_max)
+
+
+def _compound_ppf_root(
+    q,
+    x_0,
+    x_min,
+    x_max,
+    m,
+    p_m,
+    *shape_params,
+    dist: stats.rv_continuous,
+    shape_keys: tuple[str, ...],
+):
+    kwds = dict(zip(shape_keys, shape_params))
+
+    def fun(x):
+        return np.trapz(p_m * dist.cdf(x[..., None], **kwds), m) - q
+
+    def dfun(x):
+        return np.trapz(p_m * dist.pdf(x[..., None], **kwds), m)
+
+    return _vectorized_root_scalar(fun, x0=x_0, bracket=(x_min, x_max), fprime=dfun)
+
+
+def _compound_isf_root(
+    q,
+    x_0,
+    x_min,
+    x_max,
+    m,
+    p_m,
+    *shape_params,
+    dist: stats.rv_continuous,
+    shape_keys: tuple[str, ...],
+):
+    kwds = dict(zip(shape_keys, shape_params))
+
+    def fun(x):
+        return q - np.trapz(p_m * dist.sf(x[..., None], **kwds), m)
+
+    def dfun(x):
+        return np.trapz(p_m * dist.pdf(x[..., None], **kwds), m)
+
+    return _vectorized_root_scalar(fun, x0=x_0, bracket=(x_min, x_max), fprime=dfun)
 
 
 class XrCompoundRV:
@@ -85,28 +133,17 @@ class XrCompoundRV:
         cdf_x: xr.DataArray = self.cond_rv.cdf(x)
         return (cdf_x * self.p_marginal).integrate(self.marginal_dim)
 
+    def sf(self, x: Union[float, xr.DataArray]):
+        sf_x: xr.DataArray = self.cond_rv.sf(x)
+        return (sf_x * self.p_marginal).integrate(self.marginal_dim)
+
     def ppf(self, q: Union[float, xr.DataArray]):
-        def inner_compound_ppf(
-            q, x_0, x_min, x_max, m, p_m, *shape_params, dist, shape_keys
-        ):
-            kwds = dict(zip(shape_keys, shape_params))
-
-            def fun(x):
-                return np.trapz(p_m * dist.cdf(x[..., None], **kwds), m) - q
-
-            def dfun(x):
-                return np.trapz(p_m * dist.pdf(x[..., None], **kwds), m)
-
-            # return optimize.root_scalar(fun, x0=x_0, bracket=(x_min, x_max), fprime=dfun)
-            # return optimize._chandrupatla(fun, x_min, x_max)
-            return np.clip(optimize.newton(fun, x_0, fprime=dfun), x_min, x_max)
-
         ppf_q = self.cond_rv.ppf(q)
         x_0: xr.DataArray = ppf_q.weighted(self.p_marginal).mean(self.marginal_dim)
         shape_ds = rv_to_ds(self.cond_rv)
         shape_params = list(shape_ds.values())
         return xr.apply_ufunc(
-            inner_compound_ppf,
+            _compound_ppf_root,
             q,
             x_0,
             ppf_q.min(self.marginal_dim),
@@ -119,8 +156,40 @@ class XrCompoundRV:
             kwargs=dict(dist=self.cond_rv.dist, shape_keys=shape_ds.keys()),
         )
 
+    def isf(self, q: Union[float, xr.DataArray]):
+        isf_q = self.cond_rv.isf(q)
+        x_0: xr.DataArray = isf_q.weighted(self.p_marginal).mean(self.marginal_dim)
+        shape_ds = rv_to_ds(self.cond_rv)
+        shape_params = list(shape_ds.values())
+        return xr.apply_ufunc(
+            _compound_isf_root,
+            q,
+            x_0,
+            isf_q.min(self.marginal_dim),
+            isf_q.max(self.marginal_dim),
+            self.marginal,
+            self.p_marginal,
+            *shape_params,
+            input_core_dims=[[], [], [], [], self.marginal_dim, self.marginal_dim]
+            + [self.marginal_dim] * len(shape_params),
+            kwargs=dict(dist=self.cond_rv.dist, shape_keys=shape_ds.keys()),
+        )
+
     def median(self):
         return self.ppf(0.5)
+
+    # TODO: fully impl the log* functions once tanh-sinh quadrature is added to scipy,
+    #  which allows evaluating the log of the integral based on the log of the integrand
+    #  https://github.com/scipy/scipy/pull/18650
+
+    def logpdf(self, x: Union[float, xr.DataArray]):
+        return np.log(self.pdf(x))
+
+    def logcdf(self, x: Union[float, xr.DataArray]):
+        return np.log(self.cdf(x))
+
+    def logsf(self, x: Union[float, xr.DataArray]):
+        return np.log(self.sf(x))
 
 
 def compound_pdf(
