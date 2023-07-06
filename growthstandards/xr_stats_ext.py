@@ -28,20 +28,25 @@ def rv_to_ds(rv: xr_stats.XrRV):
     )
 
 
-def ds_to_rv(
+def _ds_to_rv_args(
     distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset
-) -> xr_stats.XrRV:
+) -> list[xr.DataArray]:
     args = [ds[s.name] for s in distr._shape_info()]
     if "loc" in ds:
         args.append(ds["loc"])
     if "scale" in ds:
         args.append(ds["scale"])
+    return args
+
+
+def ds_to_rv(
+    distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset
+) -> xr_stats.XrRV:
+    args = _ds_to_rv_args(distr, ds)
     if isinstance(distr, stats.rv_discrete):
         rv = xr_stats.XrDiscreteRV(distr, *args)
-        # rv = xr_stats.XrDiscreteRV(distr, **dict(ds.items()))
     elif isinstance(distr, stats.rv_continuous):
         rv = xr_stats.XrContinuousRV(distr, *args)
-        # rv = xr_stats.XrContinuousRV(distr, **dict(ds.items()))
     else:
         raise TypeError(distr)
     rv.attrs = ds.attrs
@@ -66,7 +71,8 @@ def map_rv_ds(
     kls = type(rv)
     ds = rv_to_ds(rv)
     ds = map_ds(ds)
-    mapped_rv = kls(rv.dist, **dict(ds.items()))
+    args = _ds_to_rv_args(rv.dist, ds)
+    mapped_rv = kls(rv.dist, *args)
     mapped_rv.attrs = ds.attrs
     return mapped_rv
 
