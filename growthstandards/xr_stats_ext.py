@@ -64,6 +64,9 @@ def rv_coords(rv: xr_stats.XrRV) -> xr.Dataset:
         combine_attrs="drop_conflicts",
     )
 
+if not hasattr(xr_stats.XrRV, "coords"):
+    xr_stats.XrRV.coords = property(rv_coords, doc=xr.Dataset.coords.__doc__)
+
 
 def map_rv_ds(
     rv: xr_stats.XrRV, map_ds: Callable[[xr.Dataset], xr.Dataset]
@@ -174,6 +177,8 @@ def _compound_isf_root(
 
 
 class XrCompoundRV:
+    # TODO: support multiple marginal rvs, change arg to `marginals: Mappable[Hashable, XrContinuousRV]` and/or
+    #       `**marginal_kwargs: XrContinuousRV`
     def __init__(
         self,
         cond_rv: xr_stats.XrContinuousRV,
@@ -184,6 +189,7 @@ class XrCompoundRV:
         self.marginal = rv_coords(cond_rv)[marginal_coord]
         self.cond_rv = cond_rv
         self.marginal_rv = marginal_rv
+        self.attrs = getattr(cond_rv, "attrs", {}).copy()
 
     @cached_property
     def p_marginal(self) -> xr.DataArray:
@@ -193,20 +199,28 @@ class XrCompoundRV:
     def logp_marginal(self) -> xr.DataArray:
         return self.marginal_rv.logpdf(self.marginal)
 
-    def pdf(self, x: Union[float, xr.DataArray]):
-        p_x: xr.DataArray = self.cond_rv.pdf(x)
+    @property
+    def coords(self) -> xr.Dataset:
+        return xr.merge(
+            (rv_coords(self.cond_rv), rv_coords(self.marginal_rv)),
+            compat="broadcast_equals",
+            combine_attrs="drop_conflicts",
+        ).drop_vars(self.coord)
+
+    def pdf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        p_x: xr.DataArray = self.cond_rv.pdf(x, apply_kwargs=apply_kwargs)
         return (p_x * self.p_marginal).integrate(self.coord)
 
-    def cdf(self, x: Union[float, xr.DataArray]):
-        cdf_x: xr.DataArray = self.cond_rv.cdf(x)
+    def cdf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        cdf_x: xr.DataArray = self.cond_rv.cdf(x, apply_kwargs=apply_kwargs)
         return (cdf_x * self.p_marginal).integrate(self.coord)
 
-    def sf(self, x: Union[float, xr.DataArray]):
-        sf_x: xr.DataArray = self.cond_rv.sf(x)
+    def sf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        sf_x: xr.DataArray = self.cond_rv.sf(x, apply_kwargs=apply_kwargs)
         return (sf_x * self.p_marginal).integrate(self.coord)
 
-    def ppf(self, q: Union[float, xr.DataArray]):
-        ppf_q = self.cond_rv.ppf(q)
+    def ppf(self, q: Union[float, xr.DataArray], apply_kwargs=None):
+        ppf_q = self.cond_rv.ppf(q, apply_kwargs=apply_kwargs)
         x_0: xr.DataArray = ppf_q.weighted(self.p_marginal).mean(self.coord)
         shape_ds = rv_to_ds(self.cond_rv)
         shape_params = list(shape_ds.values())
@@ -224,8 +238,8 @@ class XrCompoundRV:
             kwargs=dict(dist=self.cond_rv.dist, shape_keys=shape_ds.keys()),
         )
 
-    def isf(self, q: Union[float, xr.DataArray]):
-        isf_q = self.cond_rv.isf(q)
+    def isf(self, q: Union[float, xr.DataArray], apply_kwargs=None):
+        isf_q = self.cond_rv.isf(q, apply_kwargs=apply_kwargs)
         x_0: xr.DataArray = isf_q.weighted(self.p_marginal).mean(self.coord)
         shape_ds = rv_to_ds(self.cond_rv)
         shape_params = list(shape_ds.values())
@@ -243,19 +257,19 @@ class XrCompoundRV:
             kwargs=dict(dist=self.cond_rv.dist, shape_keys=shape_ds.keys()),
         )
 
-    def median(self):
-        return self.ppf(0.5)
+    def median(self, apply_kwargs=None):
+        return self.ppf(0.5, apply_kwargs=apply_kwargs)
 
-    def logpdf(self, x: Union[float, xr.DataArray]):
-        logp_x: xr.DataArray = self.cond_rv.logpdf(x)
+    def logpdf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        logp_x: xr.DataArray = self.cond_rv.logpdf(x, apply_kwargs=apply_kwargs)
         return xr_log_integrate(logp_x + self.logp_marginal, self.coord)
 
-    def logcdf(self, x: Union[float, xr.DataArray]):
-        logcdf_x: xr.DataArray = self.cond_rv.logcdf(x)
+    def logcdf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        logcdf_x: xr.DataArray = self.cond_rv.logcdf(x, apply_kwargs=apply_kwargs)
         return xr_log_integrate(logcdf_x + self.logp_marginal, self.coord)
 
-    def logsf(self, x: Union[float, xr.DataArray]):
-        logsf_x: xr.DataArray = self.cond_rv.logsf(x)
+    def logsf(self, x: Union[float, xr.DataArray], apply_kwargs=None):
+        logsf_x: xr.DataArray = self.cond_rv.logsf(x, apply_kwargs=apply_kwargs)
         return xr_log_integrate(logsf_x + self.logp_marginal, self.coord)
 
 
