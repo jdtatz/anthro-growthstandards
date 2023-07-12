@@ -7,13 +7,15 @@ import xarray as xr
 import xarray_einstats.stats as xr_stats
 import zarr
 
-from .bcs_ext.scipy_ext import BCCG
+from .bcs_ext.scipy_ext import BCCG, BCPE
 from .xr_stats_ext import ds_to_rv
 
 GROWTHSTANDARD_KEYS = (
     "arm_c",
     "bmi_height",
     "bmi_length",
+    "brain",
+    "csf",
     "head_c",
     "height",
     "length",
@@ -50,12 +52,12 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
         # Do not mutate
         gfl = load_growthstandard_ds("wfl").copy()
         gfl["m"] = gfl["m"] / gfl.coords["length"]
-        return gfl.assign_attrs(long_name="Growth Metric for Length", units="kg/cm")
+        return gfl.assign_attrs(long_name="Growth Metric (Recumbent Length)", units="kg/cm")
     elif g == "gfh":
         # Do not mutate
         gfh = load_growthstandard_ds("wfh").copy()
         gfh["m"] = gfh["m"] / gfh.coords["height"]
-        return gfh.assign_attrs(long_name="Growth Metric for Height", units="kg/cm")
+        return gfh.assign_attrs(long_name="Growth Metric (Standing Height)", units="kg/cm")
     else:
         raise KeyError(g)
 
@@ -63,7 +65,10 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
 class _GrowthStandards(Mapping):
     def __getitem__(self, key: str) -> xr_stats.XrContinuousRV:
         gds = load_growthstandard_ds(key)
-        return ds_to_rv(BCCG, gds.rename_vars({"m": "mu", "s": "sigma", "l": "nu"}))
+        if key in ("brain", "csf"):
+            return ds_to_rv(BCPE, gds.rename_vars({"tau": "beta"}))
+        else:
+            return ds_to_rv(BCCG, gds.rename_vars({"m": "mu", "s": "sigma", "l": "nu"}))
 
     def __iter__(self) -> Iterator:
         return iter(GROWTHSTANDARD_NAMES)

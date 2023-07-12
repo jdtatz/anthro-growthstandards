@@ -63,8 +63,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "arm_c/m/.zarray": {
             "chunks": [
@@ -92,8 +91,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "arm_c/s/.zarray": {
             "chunks": [
@@ -121,8 +119,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "arm_c/sex/.zarray": {
             "chunks": [
@@ -145,31 +142,6 @@
             "zarr_format": 2
         },
         "arm_c/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "arm_c/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "arm_c/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -234,8 +206,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_height/m/.zarray": {
             "chunks": [
@@ -263,8 +234,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_height/s/.zarray": {
             "chunks": [
@@ -292,8 +262,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_height/sex/.zarray": {
             "chunks": [
@@ -316,31 +285,6 @@
             "zarr_format": 2
         },
         "bmi_height/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "bmi_height/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "bmi_height/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -405,8 +349,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_length/m/.zarray": {
             "chunks": [
@@ -434,8 +377,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_length/s/.zarray": {
             "chunks": [
@@ -463,8 +405,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "bmi_length/sex/.zarray": {
             "chunks": [
@@ -491,7 +432,95 @@
                 "sex"
             ]
         },
-        "bmi_length/sex_enum/.zarray": {
+        "brain/.zattrs": {
+            "long_name": "Brain Tissue",
+            "units": "cm^3"
+        },
+        "brain/.zgroup": {
+            "zarr_format": 2
+        },
+        "brain/age/.zarray": {
+            "chunks": [
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                983
+            ],
+            "zarr_format": 2
+        },
+        "brain/age/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "age"
+            ]
+        },
+        "brain/mu/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "brain/mu/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "brain/nu/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "brain/nu/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "brain/sex/.zarray": {
             "chunks": [
                 2
             ],
@@ -502,18 +531,251 @@
                 "id": "blosc",
                 "shuffle": 1
             },
-            "dtype": "<i8",
+            "dtype": "|O",
             "fill_value": null,
-            "filters": null,
+            "filters": [
+                {
+                    "id": "vlen-utf8"
+                }
+            ],
             "order": "C",
             "shape": [
                 2
             ],
             "zarr_format": 2
         },
-        "bmi_length/sex_enum/.zattrs": {
+        "brain/sex/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
+            ]
+        },
+        "brain/sigma/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "brain/sigma/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "brain/tau/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "brain/tau/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "csf/.zattrs": {
+            "long_name": "CSF Volume",
+            "units": "cm^3"
+        },
+        "csf/.zgroup": {
+            "zarr_format": 2
+        },
+        "csf/age/.zarray": {
+            "chunks": [
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                983
+            ],
+            "zarr_format": 2
+        },
+        "csf/age/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "age"
+            ]
+        },
+        "csf/mu/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "csf/mu/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "csf/nu/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "csf/nu/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "csf/sex/.zarray": {
+            "chunks": [
+                2
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "|O",
+            "fill_value": null,
+            "filters": [
+                {
+                    "id": "vlen-utf8"
+                }
+            ],
+            "order": "C",
+            "shape": [
+                2
+            ],
+            "zarr_format": 2
+        },
+        "csf/sex/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex"
+            ]
+        },
+        "csf/sigma/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "csf/sigma/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
+            ]
+        },
+        "csf/tau/.zarray": {
+            "chunks": [
+                2,
+                983
+            ],
+            "compressor": {
+                "blocksize": 0,
+                "clevel": 5,
+                "cname": "lz4",
+                "id": "blosc",
+                "shuffle": 1
+            },
+            "dtype": "<f8",
+            "fill_value": "NaN",
+            "filters": null,
+            "order": "C",
+            "shape": [
+                2,
+                983
+            ],
+            "zarr_format": 2
+        },
+        "csf/tau/.zattrs": {
+            "_ARRAY_DIMENSIONS": [
+                "sex",
+                "age"
             ]
         },
         "head_c/.zattrs": {
@@ -576,8 +838,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "head_c/m/.zarray": {
             "chunks": [
@@ -605,8 +866,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "head_c/s/.zarray": {
             "chunks": [
@@ -634,8 +894,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "head_c/sex/.zarray": {
             "chunks": [
@@ -658,31 +917,6 @@
             "zarr_format": 2
         },
         "head_c/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "head_c/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "head_c/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -747,8 +981,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "height/m/.zarray": {
             "chunks": [
@@ -776,8 +1009,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "height/s/.zarray": {
             "chunks": [
@@ -805,8 +1037,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "height/sex/.zarray": {
             "chunks": [
@@ -829,31 +1060,6 @@
             "zarr_format": 2
         },
         "height/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "height/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "height/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -918,8 +1124,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "length/m/.zarray": {
             "chunks": [
@@ -947,8 +1152,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "length/s/.zarray": {
             "chunks": [
@@ -976,8 +1180,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "length/sex/.zarray": {
             "chunks": [
@@ -1000,31 +1203,6 @@
             "zarr_format": 2
         },
         "length/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "length/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "length/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -1089,8 +1267,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ss/m/.zarray": {
             "chunks": [
@@ -1118,8 +1295,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ss/s/.zarray": {
             "chunks": [
@@ -1147,8 +1323,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ss/sex/.zarray": {
             "chunks": [
@@ -1171,31 +1346,6 @@
             "zarr_format": 2
         },
         "ss/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "ss/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "ss/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -1260,8 +1410,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ts/m/.zarray": {
             "chunks": [
@@ -1289,8 +1438,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ts/s/.zarray": {
             "chunks": [
@@ -1318,8 +1466,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "ts/sex/.zarray": {
             "chunks": [
@@ -1342,31 +1489,6 @@
             "zarr_format": 2
         },
         "ts/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "ts/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "ts/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
@@ -1431,8 +1553,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "weight/m/.zarray": {
             "chunks": [
@@ -1460,8 +1581,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "weight/s/.zarray": {
             "chunks": [
@@ -1489,8 +1609,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "age"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "weight/sex/.zarray": {
             "chunks": [
@@ -1517,33 +1636,8 @@
                 "sex"
             ]
         },
-        "weight/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "weight/sex_enum/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
         "wfh/.zattrs": {
-            "long_name": "Weight for Height",
+            "long_name": "Weight (Standing Height)",
             "units": "kg"
         },
         "wfh/.zgroup": {
@@ -1602,8 +1696,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "height"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfh/m/.zarray": {
             "chunks": [
@@ -1631,8 +1724,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "height"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfh/s/.zarray": {
             "chunks": [
@@ -1660,8 +1752,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "height"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfh/sex/.zarray": {
             "chunks": [
@@ -1688,33 +1779,8 @@
                 "sex"
             ]
         },
-        "wfh/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "wfh/sex_enum/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
         "wfl/.zattrs": {
-            "long_name": "Weight for Length",
+            "long_name": "Weight (Recumbent Length)",
             "units": "kg"
         },
         "wfl/.zgroup": {
@@ -1746,8 +1812,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "length"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfl/length/.zarray": {
             "chunks": [
@@ -1802,8 +1867,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "length"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfl/s/.zarray": {
             "chunks": [
@@ -1831,8 +1895,7 @@
             "_ARRAY_DIMENSIONS": [
                 "sex",
                 "length"
-            ],
-            "coordinates": "sex_enum"
+            ]
         },
         "wfl/sex/.zarray": {
             "chunks": [
@@ -1855,31 +1918,6 @@
             "zarr_format": 2
         },
         "wfl/sex/.zattrs": {
-            "_ARRAY_DIMENSIONS": [
-                "sex"
-            ]
-        },
-        "wfl/sex_enum/.zarray": {
-            "chunks": [
-                2
-            ],
-            "compressor": {
-                "blocksize": 0,
-                "clevel": 5,
-                "cname": "lz4",
-                "id": "blosc",
-                "shuffle": 1
-            },
-            "dtype": "<i8",
-            "fill_value": null,
-            "filters": null,
-            "order": "C",
-            "shape": [
-                2
-            ],
-            "zarr_format": 2
-        },
-        "wfl/sex_enum/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "sex"
             ]
