@@ -10,6 +10,8 @@ import zarr
 from .bcs_ext.scipy_ext import BCCG, BCPE
 from .xr_stats_ext import ds_to_rv
 
+ANTHRO_DAYS_OF_MONTH = 30.4375
+
 GROWTHSTANDARD_KEYS = (
     "arm_c",
     "bmi_height",
