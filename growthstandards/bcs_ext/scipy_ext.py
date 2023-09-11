@@ -1,56 +1,14 @@
 from functools import reduce
 
-import numba as nb
 import numpy as np
-import numpy.typing as npt
 import scipy.special as sc
 import scipy.stats as stats
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
+from .log_ext_ufunc import log1mexp, logsubexp
+
 # LN_2 = np.log(2)
 LN_2 = 0.693147180559945309417232121458176568
-
-
-@nb.vectorize
-def log1mexp(x: npt.ArrayLike) -> npt.NDArray:
-    """log(1 - exp(-x))
-
-    References
-    ----------
-    [Maechler, Martin (2012). Accurately Computing log(1-exp(-|a|)).](https://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf)
-    """
-    if x > LN_2:
-        return np.log1p(-np.exp(-x))
-    else:
-        return np.log(-np.expm1(-x))
-
-
-@nb.vectorize
-def log1pexp(x: npt.ArrayLike) -> npt.NDArray:
-    """log(1 + exp(x))
-
-    References
-    ----------
-    [Maechler, Martin (2012). Accurately Computing log(1-exp(-|a|)).](https://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf)
-    """
-    if x <= -37:
-        return np.exp(x)
-    elif x <= 18:
-        return np.log1p(np.exp(x))
-    elif x <= 33.3:
-        return x + np.exp(-x)
-    else:
-        return x
-
-
-def logsubexp(x1: npt.ArrayLike, x2: npt.ArrayLike) -> npt.NDArray:
-    """log(exp(x1) - exp(x2))
-
-    References
-    ----------
-    [Maechler, Martin (2012). Accurately Computing log(1-exp(-|a|)).](https://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf)
-    """
-    return x1 + log1mexp(x1 - x2)
 
 
 def bcs_logpdf(distr, y, mu, sigma, nu, *shape_params, **shape_kwds):
