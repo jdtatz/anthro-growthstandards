@@ -100,9 +100,7 @@ def bcs_logsf(distr, y, mu, sigma, nu, *shape_params, **shape_kwds):
 
 
 # Have to use approx, as doing the numerical integration isn't vectorized & takes an extremely long time
-def approx_bcs_munp(
-    distr, n, mu, sigma, nu, *shape_params, max_distr_moment=6, **shape_kwds
-):
+def approx_bcs_munp(distr, n, mu, sigma, nu, *shape_params, max_distr_moment=6, **shape_kwds):
     r"""$$\mathop{\mathbb{E}}\left[\left(\mu \left(1 + \sigma \nu X\right)^{1/\nu}\right)^n\right] = \mu^n \sum_{k=0}^{\infty} \binom{n / \nu}{k} \left(\nu  \sigma \right)^k \mathop{\mathbb{E}}\left[X^k\right]$$"""
     mom = 1
     alpha = n / nu
@@ -110,22 +108,16 @@ def approx_bcs_munp(
     # TODO: Stop assuming `distr` is symmetric, so as to work with truncated distributions
     # TODO: Take advantage of `k ∈ ℕ` and iteratively calc `binom(alpha, k)` and `c**k` via conversion to horner form
     for k in range(2, 1 + max_distr_moment, 2):
-        mom += (
-            distr.moment(k, *shape_params, **shape_kwds) * c**k * sc.binom(alpha, k)
-        )
+        mom += distr.moment(k, *shape_params, **shape_kwds) * c**k * sc.binom(alpha, k)
     return mom * mu**n
 
 
 # Have to use approx, as doing the numerical integration isn't vectorized & takes an extremely long time
-def approx_bcs_stats(
-    distr, mu, sigma, nu, *shape_params, use_6th_moment=False, **shape_kwds
-):
+def approx_bcs_stats(distr, mu, sigma, nu, *shape_params, use_6th_moment=False, **shape_kwds):
     r"""This uses the same expansions from `approx_bcs_munp`, but does an additional expansion at $\sigma \to 0$ to linearize"""
     mean = mu * (1 + (1 - nu) * sigma**2 / 2)
     E_Z_4 = distr.moment(4, *shape_params, **shape_kwds)
-    cv = sigma * (
-        1 + (nu - 1) * sigma**2 * ((11 * nu - 7) * E_Z_4 - (3 * nu - 15)) / 24
-    )
+    cv = sigma * (1 + (nu - 1) * sigma**2 * ((11 * nu - 7) * E_Z_4 - (3 * nu - 15)) / 24)
     skew = 3 * (1 - nu) * sigma * (E_Z_4 - 1) / 2
     # FIXME: fails for BCCG, but works for BCPE
     kurtosis = E_Z_4 - 3
@@ -136,13 +128,7 @@ def approx_bcs_stats(
             kurtosis
             - sigma**2
             * (nu - 1)
-            * (
-                E_Z_4**2 * (11 * nu - 7)
-                + 15 * E_Z_4 * (nu - 1)
-                + E_Z_6 * (13 - 17 * nu)
-                - 9 * nu
-                + 9
-            )
+            * (E_Z_4**2 * (11 * nu - 7) + 15 * E_Z_4 * (nu - 1) + E_Z_6 * (13 - 17 * nu) - 9 * nu + 9)
             / 6
         )
     return mean, (mean * cv) ** 2, skew, kurtosis
@@ -156,6 +142,7 @@ class _BCS_gen(stats.rv_continuous):
     ----------
     [Box-Cox symmetric distributions and applications to nutritional data](https://arxiv.org/pdf/1604.02221.pdf)
     """
+
     _distr: stats.rv_continuous
 
     def __init__(self, *args, **kwargs):
@@ -189,7 +176,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     def _pdf(self, x, mu, sigma, nu, *shape_params):
@@ -203,7 +190,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     def _sf(self, x, mu, sigma, nu, *shape_params):
@@ -214,7 +201,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     def _logcdf(self, x, mu, sigma, nu, *shape_params):
@@ -225,7 +212,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     def _logsf(self, x, mu, sigma, nu, *shape_params):
@@ -236,7 +223,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     def _ppf(self, q, mu, sigma, nu, *shape_params):
@@ -247,7 +234,7 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     # def _isf(self, q, mu, sigma, nu, *shape_params):
@@ -262,16 +249,14 @@ class _BCS_gen(stats.rv_continuous):
             nu,
             *shape_params,
             max_distr_moment=6,
-            **self._get_shape_kwds(*shape_params)
+            **self._get_shape_kwds(*shape_params),
         )
 
     # def _stats(self, mu, sigma, nu, *shape_params):
     #     return approx_bcs_stats(self._distr, mu, sigma, nu, *shape_params, use_6th_moment=True, **self._get_shape_kwds(*shape_params))
 
     def _argcheck(self, mu, sigma, nu, *shape_params):
-        return reduce(
-            np.logical_and, [mu > 0, sigma > 0, np.isfinite(nu)]
-        ) & self._distr._argcheck(*shape_params)
+        return reduce(np.logical_and, [mu > 0, sigma > 0, np.isfinite(nu)]) & self._distr._argcheck(*shape_params)
 
 
 class BCCG_gen(_BCS_gen):
@@ -289,6 +274,7 @@ class BCPE_gen(_BCS_gen):
     ----------
     [Smooth centile curves for skew and kurtotic data modelled using the Box–Cox power exponential distribution](https://doi.org/10.1002/sim.1861)
     """
+
     _distr = stats.gennorm
 
     def _scale_normalizer(self, beta):
@@ -319,9 +305,7 @@ if stats._continuous_distns.gennorm_gen._logcdf is stats.rv_continuous._logcdf:
     def _gennorm_logcdf(self, x, beta):
         s = abs(x) ** beta
         s_logsf = stats.gamma.logsf(s, 1 / beta)
-        s_logsf = np.where(
-            np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta)
-        )
+        s_logsf = np.where(np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta))
         return np.where(
             x >= 0,
             log1mexp(-s_logsf + LN_2),
@@ -331,9 +315,7 @@ if stats._continuous_distns.gennorm_gen._logcdf is stats.rv_continuous._logcdf:
     def _gennorm_logsf(self, x, beta):
         s = abs(x) ** beta
         s_logsf = stats.gamma.logsf(s, 1 / beta)
-        s_logsf = np.where(
-            np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta)
-        )
+        s_logsf = np.where(np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta))
         return np.where(
             x >= 0,
             s_logsf - LN_2,

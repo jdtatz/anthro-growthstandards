@@ -11,16 +11,18 @@ from tensorflow_probability.substrates.jax.bijectors import (
 from tensorflow_probability.substrates.jax.bijectors import (
     softplus as softplus_bijector,
 )
-from tensorflow_probability.substrates.jax.distributions import distribution
-from tensorflow_probability.substrates.jax.distributions import Normal
-from tensorflow_probability.substrates.jax.distributions import GeneralizedNormal
-from tensorflow_probability.substrates.jax.distributions import MixtureSameFamily
-from tensorflow_probability.substrates.jax.internal import dtype_util
-from tensorflow_probability.substrates.jax.internal import parameter_properties
+from tensorflow_probability.substrates.jax.distributions import (
+    GeneralizedNormal,
+    MixtureSameFamily,
+    Normal,
+    distribution,
+)
+from tensorflow_probability.substrates.jax.internal import (
+    dtype_util,
+    parameter_properties,
+)
 from tensorflow_probability.substrates.jax.internal import prefer_static as ps
-from tensorflow_probability.python.internal import reparameterization
-from tensorflow_probability.substrates.jax.internal import samplers
-from tensorflow_probability.substrates.jax.internal import tensor_util
+from tensorflow_probability.substrates.jax.internal import samplers, tensor_util
 
 
 def boxcox(x, lmbda):
@@ -43,18 +45,14 @@ def inv_boxcox(y, lmbda):
 
 def same_family_mixture_quantile(self: MixtureSameFamily, value, **find_root_kwargs):
     from tensorflow_probability.substrates.jax.math import find_root_chandrupatla
+
     _, components_distribution = self._get_distributions_with_broadcast_batch_shape()
     component_quantiles = components_distribution.quantile(value)  # [B, k, E]
     event_ndims = self._event_ndims()
     lb = component_quantiles.min(axis=-1 - event_ndims)  # [B, E]
     ub = component_quantiles.max(axis=-1 - event_ndims)  # [B, E]
 
-    res = find_root_chandrupatla(
-        lambda x: self.cdf(x) - value,  # [B]
-        lb,
-        ub,
-        **find_root_kwargs
-    )
+    res = find_root_chandrupatla(lambda x: self.cdf(x) - value, lb, ub, **find_root_kwargs)  # [B]
     return res.estimated_root  # [B, E]
 
 
@@ -80,15 +78,9 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
             name = f"BoxCoxSymmetric{name}"
         with tf.name_scope(name) as name:
             dtype = dtype_util.common_dtype([loc, scale, nu], dtype_hint=tf.float32)
-            self._loc = tensor_util.convert_nonref_to_tensor(
-                loc, dtype=dtype, name="loc"
-            )
-            self._scale = tensor_util.convert_nonref_to_tensor(
-                scale, dtype=dtype, name="scale"
-            )
-            self._nu = tensor_util.convert_nonref_to_tensor(
-                nu, dtype=dtype, name="nu"
-            )
+            self._loc = tensor_util.convert_nonref_to_tensor(loc, dtype=dtype, name="loc")
+            self._scale = tensor_util.convert_nonref_to_tensor(scale, dtype=dtype, name="scale")
+            self._nu = tensor_util.convert_nonref_to_tensor(nu, dtype=dtype, name="nu")
             self._std_distr = std_distr
             super().__init__(
                 dtype=dtype,
@@ -103,14 +95,10 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
     def _parameter_properties(cls, dtype, num_classes=None):
         return dict(
             loc=parameter_properties.ParameterProperties(
-                default_constraining_bijector_fn=(
-                    lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype))
-                )
+                default_constraining_bijector_fn=(lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype)))
             ),
             scale=parameter_properties.ParameterProperties(
-                default_constraining_bijector_fn=(
-                    lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype))
-                )
+                default_constraining_bijector_fn=(lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype)))
             ),
             nu=parameter_properties.ParameterProperties(),
             std_distr=parameter_properties.BatchedComponentProperties(),
@@ -148,9 +136,7 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
     def _sample_n(self, n, seed=None):
         batch_shape = self._batch_shape_tensor()
         shape = ps.concat([[n], batch_shape], 0)
-        probs = samplers.uniform(
-            shape=shape, minval=0.0, maxval=1.0, dtype=self.dtype, seed=seed
-        )
+        probs = samplers.uniform(shape=shape, minval=0.0, maxval=1.0, dtype=self.dtype, seed=seed)
         return self._quantile(probs)
 
     def _log_prob(self, y):
@@ -163,7 +149,7 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
             - self.std_distr.log_cdf(1 / (self.scale * abs(self.nu)))
         )
         if force_probs_to_zero_outside_support:
-            return tf.where(y > 0, lp, -float('inf'))
+            return tf.where(y > 0, lp, -float("inf"))
         return lp
 
     def _cdf(self, y):
@@ -203,9 +189,7 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
         for k in range(2, 1 + MAX_DISTR_MOMENT):
             coef = coef * c * ((alpha + (1 - k)) / k)
             if k % 2 == 0:
-                mom = mom + (
-                    self._standard_moment(k) * coef
-                )
+                mom = mom + (self._standard_moment(k) * coef)
         return mom * tf.math.pow(self.loc, n)
 
     def _mean(self):
@@ -213,6 +197,7 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
 
     def _variance(self):
         return self._munp(2) - tf.math.square(self._munp(1))
+
 
 class BoxCoxColeGreen(BoxCoxSymmetric):
     def __init__(
@@ -293,6 +278,10 @@ class BoxCoxPowerExponential(BoxCoxSymmetric):
 
     def _standard_moment(self, n):
         if n % 2 == 0:
-            return tf.math.pow(self.std_distr.scale, n) * tf.math.gamma((n + 1) / self.power) / tf.math.gamma(1 / self.power)
+            return (
+                tf.math.pow(self.std_distr.scale, n)
+                * tf.math.gamma((n + 1) / self.power)
+                / tf.math.gamma(1 / self.power)
+            )
         else:
             raise NotImplementedError

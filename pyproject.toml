@@ -21,3 +21,9 @@ tfp = ["tensorflow_probability[jax]"]
 zip-safe = false
 
 [tool.setuptools_scm]
+
+[tool.black]
+line_length = 120
+
+[tool.isort]
+profile = "black"
