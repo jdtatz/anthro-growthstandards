@@ -68,7 +68,10 @@ class _GrowthStandards(Mapping):
     def __getitem__(self, key: str) -> xr_stats.XrContinuousRV:
         gds = load_growthstandard_ds(key)
         if key in ("brain", "csf"):
-            return ds_to_rv(BCPE, gds.rename_vars({"tau": "beta"}))
+            # TODO: Move nan interpolation earlier? Maybe even before saving into the zarr?
+            # Have to `interpolate_na` b/c the male & female models have coefficents at differing ages, and where they differ is filled with `NaN`.
+            #   Using PCHIP 1-D monotonic cubic interpolation to preserve the shape, while being more accurate then linear
+            return ds_to_rv(BCPE, gds.rename_vars({"tau": "beta"}).interpolate_na("age", method="pchip"))
         else:
             return ds_to_rv(BCCG, gds.rename_vars({"m": "mu", "s": "sigma", "l": "nu"}))
 
