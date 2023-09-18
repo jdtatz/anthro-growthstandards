@@ -1,6 +1,6 @@
 from functools import cached_property, partial, wraps
 from itertools import chain
-from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, Union
+from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, Union, overload
 
 import numpy as np
 import scipy.optimize as optimize
@@ -27,6 +27,7 @@ def rv_to_ds(rv: xr_stats.XrRV):
 
 
 def _ds_to_rv_args(distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset) -> list[xr.DataArray]:
+    # TODO: use`_param_info` instead of `_shape_info`?
     args = [ds[s.name] for s in distr._shape_info()]
     if "loc" in ds:
         args.append(ds["loc"])
@@ -35,7 +36,17 @@ def _ds_to_rv_args(distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.
     return args
 
 
-def ds_to_rv(distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset) -> xr_stats.XrRV:
+@overload
+def ds_to_rv(distr: stats.rv_discrete, ds: xr.Dataset) -> xr_stats.XrDiscreteRV:
+    ...
+
+
+@overload
+def ds_to_rv(distr: stats.rv_continuous, ds: xr.Dataset) -> xr_stats.XrContinuousRV:
+    ...
+
+
+def ds_to_rv(distr: Union[stats.rv_discrete, stats.rv_continuous], ds: xr.Dataset):
     args = _ds_to_rv_args(distr, ds)
     if isinstance(distr, stats.rv_discrete):
         rv = xr_stats.XrDiscreteRV(distr, *args)
@@ -59,7 +70,17 @@ if not hasattr(xr_stats.XrRV, "coords"):
     xr_stats.XrRV.coords = property(rv_coords, doc=xr.Dataset.coords.__doc__)
 
 
-def map_rv_ds(rv: xr_stats.XrRV, map_ds: Callable[[xr.Dataset], xr.Dataset]) -> xr_stats.XrRV:
+@overload
+def map_rv_ds(rv: xr_stats.XrContinuousRV, map_ds: Callable[[xr.Dataset], xr.Dataset]) -> xr_stats.XrContinuousRV:
+    ...
+
+
+@overload
+def map_rv_ds(rv: xr_stats.XrDiscreteRV, map_ds: Callable[[xr.Dataset], xr.Dataset]) -> xr_stats.XrDiscreteRV:
+    ...
+
+
+def map_rv_ds(rv: xr_stats.XrRV, map_ds: Callable[[xr.Dataset], xr.Dataset]):
     kls = type(rv)
     ds = rv_to_ds(rv)
     ds = map_ds(ds)
@@ -259,7 +280,7 @@ class XrCompoundRV:
 
 @wraps(xr.Dataset.isel)
 def rv_isel(
-    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    rv: Union[xr_stats.XrDiscreteRV, xr_stats.XrContinuousRV, XrCompoundRV],
     /,
     indexers: Optional[Mapping[Any, Any]] = None,
     drop: bool = False,
@@ -286,7 +307,7 @@ def rv_isel(
 
 @wraps(xr.Dataset.sel)
 def rv_sel(
-    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    rv: Union[xr_stats.XrDiscreteRV, xr_stats.XrContinuousRV, XrCompoundRV],
     /,
     indexers: Optional[Mapping[Any, Any]] = None,
     method: xr_types.ReindexMethodOptions = None,
@@ -314,7 +335,7 @@ def rv_sel(
 
 @wraps(xr.Dataset.interp)
 def rv_interp(
-    rv: Union[xr_stats.XrRV, XrCompoundRV],
+    rv: Union[xr_stats.XrDiscreteRV, xr_stats.XrContinuousRV, XrCompoundRV],
     /,
     coords: Optional[Mapping[Any, Any]] = None,
     method: xr_types.InterpOptions = "linear",
