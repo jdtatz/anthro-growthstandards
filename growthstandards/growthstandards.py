@@ -38,16 +38,18 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
         store = zarr.DirectoryStore(traversable.joinpath("growthstandards.zarr"))
         return xr.open_zarr(store=store, group=g, decode_times=False).load()
     elif g == "len_hei":
-        return xr.combine_by_coords(
+        return xr.concat(
             [load_growthstandard_ds("length"), load_growthstandard_ds("height")],
+            dim="age",
             combine_attrs="drop_conflicts",
         ).assign_attrs(long_name="Recumbent Length / Standing Height")
     elif g == "bmi":
-        return xr.combine_by_coords(
+        return xr.concat(
             [
                 load_growthstandard_ds("bmi_length"),
                 load_growthstandard_ds("bmi_height"),
             ],
+            dim="age",
             combine_attrs="drop_conflicts",
         ).assign_attrs(long_name="Body Mass Index")
     elif g == "gfl":
