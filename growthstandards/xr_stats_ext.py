@@ -311,7 +311,7 @@ def rv_sel(
     /,
     indexers: Optional[Mapping[Any, Any]] = None,
     method: xr_types.ReindexMethodOptions = None,
-    tolerance: Optional[int | float | Iterable[int | float]] = None,
+    tolerance: Optional[Union[int, float, Iterable[Union[int, float]]]] = None,
     drop: bool = False,
     **indexers_kwargs: Any,
 ):
