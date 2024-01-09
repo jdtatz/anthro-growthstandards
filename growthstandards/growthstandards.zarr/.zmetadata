@@ -1637,7 +1637,7 @@
             ]
         },
         "wfh/.zattrs": {
-            "long_name": "Weight (Standing Height)",
+            "long_name": "Weight for Standing Height",
             "units": "kg"
         },
         "wfh/.zgroup": {
@@ -1780,7 +1780,7 @@
             ]
         },
         "wfl/.zattrs": {
-            "long_name": "Weight (Recumbent Length)",
+            "long_name": "Weight for Recumbent Length",
             "units": "kg"
         },
         "wfl/.zgroup": {

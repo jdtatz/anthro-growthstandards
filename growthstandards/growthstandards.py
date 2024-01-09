@@ -44,7 +44,7 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
             [load_growthstandard_ds("length"), load_growthstandard_ds("height")],
             dim="age",
             combine_attrs="drop_conflicts",
-        ).assign_attrs(long_name="Recumbent Length / Standing Height")
+        ).assign_attrs(long_name="Recumbent Length or Standing Height")
     elif g == "bmi":
         return xr.concat(
             [
@@ -58,12 +58,12 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
         # Do not mutate
         gfl = load_growthstandard_ds("wfl").copy()
         gfl["m"] = gfl["m"] / gfl.coords["length"]
-        return gfl.assign_attrs(long_name="Growth Metric (Recumbent Length)", units="kg/cm")
+        return gfl.assign_attrs(long_name="Growth Metric for Recumbent Length", units="kg/cm")
     elif g == "gfh":
         # Do not mutate
         gfh = load_growthstandard_ds("wfh").copy()
         gfh["m"] = gfh["m"] / gfh.coords["height"]
-        return gfh.assign_attrs(long_name="Growth Metric (Standing Height)", units="kg/cm")
+        return gfh.assign_attrs(long_name="Growth Metric for Standing Height", units="kg/cm")
     else:
         raise KeyError(g)
 
