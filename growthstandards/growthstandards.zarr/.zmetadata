@@ -462,7 +462,9 @@
         "brain/age/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "age"
-            ]
+            ],
+            "long_name": "Age",
+            "units": "days"
         },
         "brain/mu/.zarray": {
             "chunks": [
@@ -531,13 +533,9 @@
                 "id": "blosc",
                 "shuffle": 1
             },
-            "dtype": "|O",
+            "dtype": "<U6",
             "fill_value": null,
-            "filters": [
-                {
-                    "id": "vlen-utf8"
-                }
-            ],
+            "filters": null,
             "order": "C",
             "shape": [
                 2
@@ -635,7 +633,9 @@
         "csf/age/.zattrs": {
             "_ARRAY_DIMENSIONS": [
                 "age"
-            ]
+            ],
+            "long_name": "Age",
+            "units": "days"
         },
         "csf/mu/.zarray": {
             "chunks": [
@@ -704,13 +704,9 @@
                 "id": "blosc",
                 "shuffle": 1
             },
-            "dtype": "|O",
+            "dtype": "<U6",
             "fill_value": null,
-            "filters": [
-                {
-                    "id": "vlen-utf8"
-                }
-            ],
+            "filters": null,
             "order": "C",
             "shape": [
                 2
