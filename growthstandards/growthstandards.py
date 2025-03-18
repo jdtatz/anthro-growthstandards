@@ -8,10 +8,12 @@ import scipy.stats
 import xarray as xr
 import xarray_einstats.stats as xr_stats
 import zarr
+import zarr.storage
 
 from .bcs_ext.scipy_ext import BCCG, BCPE
 from .xr_stats_ext import ds_to_rv, rv_to_ds
 
+# ANTHRO_DAYS_OF_MONTH = 365.25 / 12
 ANTHRO_DAYS_OF_MONTH = 30.4375
 
 GROWTHSTANDARD_KEYS = (
@@ -37,7 +39,7 @@ GROWTHSTANDARD_NAMES = (*GROWTHSTANDARD_KEYS, "len_hei", "bmi", "gfl", "gfh")
 def load_growthstandard_ds(g: str) -> xr.Dataset:
     if g in GROWTHSTANDARD_KEYS:
         traversable = importlib.resources.files(__package__)
-        store = zarr.DirectoryStore(traversable.joinpath("growthstandards.zarr"))
+        store = zarr.storage.LocalStore(traversable.joinpath("growthstandards.zarr"))
         return xr.open_zarr(store=store, group=g, decode_times=False).load()
     elif g == "len_hei":
         return xr.concat(
