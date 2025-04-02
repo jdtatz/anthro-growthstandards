@@ -16,6 +16,7 @@ class FractionalPolynomial:
     coefficients: tuple[float, ...]
     fpowers: tuple[float, ...]
     domain: tuple[float, float]
+    shift: float = 0
     inv_scale: float = field(init=False, repr=False)
 
     def __post_init__(self):
@@ -25,6 +26,8 @@ class FractionalPolynomial:
 
     def __call__(self, x: npt.ArrayLike):
         x = np.asanyarray(x)
+        if self.shift:
+            x = x + self.shift
         x = x * self.inv_scale
 
         y = self.intercept
