@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -12,12 +12,35 @@ from .bcs_ext.scipy_ext import BCPE
 
 
 class GAMLSSModel(ABC):
+    def __init_subclass__(
+        cls,
+        distr: stats.rv_continuous,
+        rv_type: Optional[type["stats._distribution_infrastructure.ContinuousDistribution"]] = None,
+    ):
+        cls._distr = distr
+        cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
+
+    @property
     @abstractmethod
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous: ...
+    def _param_names(self) -> tuple[str, ...]: ...
     @abstractmethod
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution": ...
-    @abstractmethod
-    def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV: ...
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]: ...
+
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+        return dict(zip(self._param_names, self._interpolate_params(x), strict=True))
+
+    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
+        return self._distr(**self._interpolate_param_dict(x))
+
+    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        return self._rv_type(**self._interpolate_param_dict(x))
+
+    def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
+        params = xr.apply_ufunc(self._interpolate_params, x)
+        rv = xr_stats.XrContinuousRV(self._distr, *params)
+        return rv
+
+    ## Convenience Methods
 
     def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
         return self.interpolate_rv(x).mean()
@@ -88,22 +111,16 @@ class FractionalPolynomial:
 
 
 @dataclass
-class BCPEModel(GAMLSSModel):
+class BCPEModel(GAMLSSModel, distr=BCPE):
     mu: FractionalPolynomial
     sigma: float
     nu: float
     tau: float
     attrs: dict[str, Any] = field(default_factory=dict)
 
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
-        mu = self.mu(x)
-        return BCPE(mu=mu, sigma=self.sigma, nu=self.nu, beta=self.tau)
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        return "mu", "sigma", "nu", "beta"
 
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
-        mu = self.mu(x)
-        return stats.make_distribution(BCPE)(mu=mu, sigma=self.sigma, nu=self.nu, beta=self.tau)
-
-    def interpolate_xr_rv(self, x: xr.DataArray, /) -> xr_stats.XrContinuousRV:
-        mu = xr.apply_ufunc(self.mu, x)
-        rv = xr_stats.XrContinuousRV(BCPE, mu, self.sigma, self.nu, self.tau)
-        return rv
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        return self.mu(x), self.sigma, self.nu, self.tau
