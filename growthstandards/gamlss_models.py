@@ -1,4 +1,4 @@
-from .gamlss_ext import FractionalPolynomial, BCPEModel
+from .gamlss_ext import BCPEModel, FractionalPolynomial
 
 hcff = BCPEModel(
     mu=FractionalPolynomial(
