@@ -161,14 +161,14 @@ class _BCS_gen(stats.rv_continuous):
             *self._distr._shape_info(),
         ]
 
-    def _scale_normalizer(self, *shape_params):
+    def _scale_normalizer(self, *shape_params, **shape_kwds):
         return None
 
-    def _get_shape_kwds(self, *shape_params):
-        sn = self._scale_normalizer(*shape_params)
-        return {} if sn is None else {"scale": sn}
+    def _get_shape_kwds(self, *shape_params, **shape_kwds):
+        sn = self._scale_normalizer(*shape_params, **shape_kwds)
+        return shape_kwds if sn is None else {"scale": sn, **shape_kwds}
 
-    def _logpdf(self, x, mu, sigma, nu, *shape_params):
+    def _logpdf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_logpdf(
             self._distr,
             x,
@@ -176,13 +176,13 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    def _pdf(self, x, mu, sigma, nu, *shape_params):
-        return np.exp(self._logpdf(x, mu, sigma, nu, *shape_params))
+    def _pdf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
+        return np.exp(self._logpdf(x, mu, sigma, nu, *shape_params, **shape_kwds))
 
-    def _cdf(self, x, mu, sigma, nu, *shape_params):
+    def _cdf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_cdf(
             self._distr,
             x,
@@ -190,10 +190,10 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    def _sf(self, x, mu, sigma, nu, *shape_params):
+    def _sf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_sf(
             self._distr,
             x,
@@ -201,10 +201,10 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    def _logcdf(self, x, mu, sigma, nu, *shape_params):
+    def _logcdf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_logcdf(
             self._distr,
             x,
@@ -212,10 +212,10 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    def _logsf(self, x, mu, sigma, nu, *shape_params):
+    def _logsf(self, x, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_logsf(
             self._distr,
             x,
@@ -223,10 +223,10 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    def _ppf(self, q, mu, sigma, nu, *shape_params):
+    def _ppf(self, q, mu, sigma, nu, *shape_params, **shape_kwds):
         return bcs_ppf(
             self._distr,
             q,
@@ -234,13 +234,13 @@ class _BCS_gen(stats.rv_continuous):
             sigma,
             nu,
             *shape_params,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    # def _isf(self, q, mu, sigma, nu, *shape_params):
-    #     return bcs_isf(self._distr, q, mu, sigma, nu, *shape_params, **self._get_shape_kwds(*shape_params))
+    # def _isf(self, q, mu, sigma, nu, *shape_params, **shape_kwds):
+    #     return bcs_isf(self._distr, q, mu, sigma, nu, *shape_params, **self._get_shape_kwds(*shape_params, **shape_kwds))
 
-    def _munp(self, n, mu, sigma, nu, *shape_params):
+    def _munp(self, n, mu, sigma, nu, *shape_params, **shape_kwds):
         return approx_bcs_munp(
             self._distr,
             n,
@@ -249,14 +249,16 @@ class _BCS_gen(stats.rv_continuous):
             nu,
             *shape_params,
             max_distr_moment=6,
-            **self._get_shape_kwds(*shape_params),
+            **self._get_shape_kwds(*shape_params, **shape_kwds),
         )
 
-    # def _stats(self, mu, sigma, nu, *shape_params):
-    #     return approx_bcs_stats(self._distr, mu, sigma, nu, *shape_params, use_6th_moment=True, **self._get_shape_kwds(*shape_params))
+    # def _stats(self, mu, sigma, nu, *shape_params, **shape_kwds):
+    #     return approx_bcs_stats(self._distr, mu, sigma, nu, *shape_params, use_6th_moment=True, **self._get_shape_kwds(*shape_params, **shape_kwds))
 
-    def _argcheck(self, mu, sigma, nu, *shape_params):
-        return reduce(np.logical_and, [mu > 0, sigma > 0, np.isfinite(nu)]) & self._distr._argcheck(*shape_params)
+    def _argcheck(self, mu, sigma, nu, *shape_params, **shape_kwds):
+        return reduce(np.logical_and, [mu > 0, sigma > 0, np.isfinite(nu)]) & self._distr._argcheck(
+            *shape_params, **shape_kwds
+        )
 
 
 class BCCG_gen(_BCS_gen):
