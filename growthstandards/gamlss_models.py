@@ -91,7 +91,8 @@ tissMM = BCPEModel(
     tau=1.4925378336133452,
     attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
 )
-ratioF = BCPEModel(
+## FIXME: broken upstream
+_ratioF = BCPEModel(
     mu=FractionalPolynomial(
         intercept=11.082874194353732,
         coefficients=(-4.805927794274573, 3.3948503231064917, -1.021721471224189),
@@ -104,7 +105,8 @@ ratioF = BCPEModel(
     tau=1.4670145753100101,
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )
-ratioM = BCPEModel(
+## FIXME: broken upstream
+_ratioM = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-10.811516509095394,
         coefficients=(-2.580157458459326, 17.191469945479266, -4.655185756173699),
@@ -115,5 +117,31 @@ ratioM = BCPEModel(
     sigma=0.19355213570641322,
     nu=-0.7371007188630626,
     tau=1.1088596075611707,
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+)
+tcF = BCPEModel(
+    mu=FractionalPolynomial(
+        intercept=7.451604029302721,
+        coefficients=(1.9311003202293868, 0.2614952054465591, -0.9333994900219552),
+        fpowers=(0.0, 0.0, 1.0),
+        domain=(14.0, 8131.0),
+        shift=0,
+    ),
+    sigma=0.1794621569220545,
+    nu=0.23164241283324605,
+    tau=1.575493711060244,
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+)
+tcM = BCPEModel(
+    mu=FractionalPolynomial(
+        intercept=7.538670088628258,
+        coefficients=(2.2650666623903875, 0.3319242947160484, -1.0650611097770506),
+        fpowers=(0.0, 0.0, 1.0),
+        domain=(13.0, 8073.0),
+        shift=0,
+    ),
+    sigma=0.1739079745612507,
+    nu=0.019907631818795388,
+    tau=1.344436268710693,
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )
