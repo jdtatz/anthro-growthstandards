@@ -1,4 +1,4 @@
-from .gamlss_ext import BCPEModel, FractionalPolynomial
+from .gamlss_ext import *
 
 hcff = BCPEModel(
     mu=FractionalPolynomial(
@@ -8,9 +8,9 @@ hcff = BCPEModel(
         domain=(48.5, 180.5),
         shift=0,
     ),
-    sigma=0.02777896478099617,
+    sigma=LogLink(-3.5834762072532387),
     nu=-0.5756035007094116,
-    tau=1.7442074097777245,
+    tau=LogLink(0.5563002460403006),
     attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
 )
 hcmm = BCPEModel(
@@ -21,9 +21,9 @@ hcmm = BCPEModel(
         domain=(51.0, 195.6),
         shift=0,
     ),
-    sigma=0.026290598160587913,
+    sigma=LogLink(-3.6385438880994867),
     nu=-0.020559517437386845,
-    tau=1.567570835467868,
+    tau=LogLink(0.4495271825950411),
     attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
 )
 hcxx = BCPEModel(
@@ -34,9 +34,9 @@ hcxx = BCPEModel(
         domain=(48.5, 195.6),
         shift=0,
     ),
-    sigma=0.028047223561619736,
+    sigma=LogLink(-3.5738656336728867),
     nu=-0.28912191253351954,
-    tau=1.7037869516388158,
+    tau=LogLink(0.5328533922094477),
     attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
 )
 csfFF = BCPEModel(
@@ -47,9 +47,9 @@ csfFF = BCPEModel(
         domain=(-21, 8131),
         shift=22,
     ),
-    sigma=0.1987401446766343,
+    sigma=LogLink(-1.615757113209806),
     nu=0.42546112691657323,
-    tau=1.1913297140133805,
+    tau=LogLink(0.17507009002314125),
     attrs={"long_name": "CSF Volume", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
 )
 csfMM = BCPEModel(
@@ -60,9 +60,9 @@ csfMM = BCPEModel(
         domain=(-21.0, 8073.0),
         shift=22,
     ),
-    sigma=0.20214608231187753,
+    sigma=LogLink(-1.5987646631876429),
     nu=0.6562282247254976,
-    tau=1.189826112280165,
+    tau=LogLink(0.17380717231195147),
     attrs={"long_name": "CSF Volume", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
 )
 tissFF = BCPEModel(
@@ -73,9 +73,9 @@ tissFF = BCPEModel(
         domain=(-21, 8131),
         shift=22,
     ),
-    sigma=0.07957818731572654,
+    sigma=LogLink(-2.5310152523814264),
     nu=-0.4708322009246219,
-    tau=2.0429683451866,
+    tau=LogLink(0.7144038214357605),
     attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
 )
 tissMM = BCPEModel(
@@ -86,9 +86,9 @@ tissMM = BCPEModel(
         domain=(-21.0, 8073.0),
         shift=22,
     ),
-    sigma=0.0730139478452033,
+    sigma=LogLink(-2.6171047897119526),
     nu=0.6989205425456295,
-    tau=1.4925378336133452,
+    tau=LogLink(0.40047791511800596),
     attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
 )
 ## FIXME: broken upstream
@@ -100,9 +100,9 @@ _ratioF = BCPEModel(
         domain=(-21, 8131),
         shift=22,
     ),
-    sigma=0.19848713943506638,
+    sigma=LogLink(-1.6170309696939928),
     nu=0.05701029564202015,
-    tau=1.4670145753100101,
+    tau=LogLink(0.3832294345648013),
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )
 ## FIXME: broken upstream
@@ -114,9 +114,9 @@ _ratioM = BCPEModel(
         domain=(-21.0, 8073.0),
         shift=22,
     ),
-    sigma=0.19355213570641322,
+    sigma=LogLink(-1.6422083676281767),
     nu=-0.7371007188630626,
-    tau=1.1088596075611707,
+    tau=LogLink(0.10333210663154822),
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )
 tcF = BCPEModel(
@@ -127,9 +127,9 @@ tcF = BCPEModel(
         domain=(14.0, 8131.0),
         shift=0,
     ),
-    sigma=0.1794621569220545,
+    sigma=LogLink(-1.7177909182272781),
     nu=0.23164241283324605,
-    tau=1.575493711060244,
+    tau=LogLink(0.45456869049681214),
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )
 tcM = BCPEModel(
@@ -140,8 +140,8 @@ tcM = BCPEModel(
         domain=(13.0, 8073.0),
         shift=0,
     ),
-    sigma=0.1739079745612507,
+    sigma=LogLink(-1.7492290015068284),
     nu=0.019907631818795388,
-    tau=1.344436268710693,
+    tau=LogLink(0.29597479412370803),
     attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
 )

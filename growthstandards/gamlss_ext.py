@@ -1,14 +1,26 @@
 from abc import ABC, abstractmethod
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any, Optional, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
+import scipy.special
 import scipy.stats as stats
 import xarray as xr
 import xarray_einstats.stats as xr_stats
 
 from .bcs_ext.scipy_ext import BCPE
+
+GAMLSSParam: TypeAlias = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
+
+
+def _interpolate(x: npt.ArrayLike, p: GAMLSSParam):
+    return p if isinstance(p, (int, float)) else p(x)
+
+
+def _interpolate_tuple(x: npt.ArrayLike, *ps: GAMLSSParam):
+    return tuple(_interpolate(x, p) for p in ps)
 
 
 class GAMLSSModel(ABC):
@@ -79,6 +91,31 @@ class GAMLSSModel(ABC):
         return self.interpolate_rv(x).ilogccdf(logp)
 
 
+class GAMLSSLinkFunction(ABC):
+    def __init__(self, inner: GAMLSSParam):
+        self.inner = inner
+
+    def __repr__(self):
+        name = type(self).__name__
+        return f"{name}({self.inner!r})"
+
+    @abstractmethod
+    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike: ...
+
+    def __call__(self, x: npt.ArrayLike, /):
+        return self.forward(_interpolate(x, self.inner))
+
+
+class LogLink(GAMLSSLinkFunction):
+    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
+        return np.exp(value)
+
+
+class LogitLink(GAMLSSLinkFunction):
+    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
+        return scipy.special.expit(value)
+
+
 @dataclass
 class FractionalPolynomial:
     intercept: float
@@ -112,10 +149,10 @@ class FractionalPolynomial:
 
 @dataclass
 class BCPEModel(GAMLSSModel, distr=BCPE):
-    mu: FractionalPolynomial
-    sigma: float
-    nu: float
-    tau: float
+    mu: GAMLSSParam
+    sigma: GAMLSSParam
+    nu: GAMLSSParam
+    tau: GAMLSSParam
     attrs: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -123,4 +160,4 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
         return "mu", "sigma", "nu", "beta"
 
     def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
-        return self.mu(x), self.sigma, self.nu, self.tau
+        return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau)
