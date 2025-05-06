@@ -5,6 +5,7 @@ from typing import Any, Optional, TypeAlias
 
 import numpy as np
 import numpy.typing as npt
+import scipy.interpolate as interpolate
 import scipy.special
 import scipy.stats as stats
 import xarray as xr
@@ -147,6 +148,30 @@ class FractionalPolynomial:
         return y
 
 
+## FIXME: Bikeshed (include linear component in name)
+@dataclass
+class PSpline:
+    domain: tuple[float, float]
+    intercept: float
+    slope: float
+    spline_coefficients: tuple[float, ...]
+    spline_degree: int
+    spline: Callable = field(init=False, repr=False)
+
+    def __post_init__(self):
+        ndx = len(self.spline_coefficients) - self.spline_degree
+        xmin, xmax = self.domain
+        xmin, xmax = (xmin - 0.01 * (xmax - xmin)), (xmax + 0.01 * (xmax - xmin))
+        dx = (xmax - xmin) / ndx
+        knots = xmin + np.arange(-self.spline_degree, ndx + self.spline_degree + 1) * dx
+
+        self.spline = interpolate.BSpline(knots, self.spline_coefficients, self.spline_degree)
+
+    def __call__(self, x: npt.ArrayLike, /):
+        x = np.asanyarray(x)
+        return self.intercept + self.slope * x + self.spline(x)
+
+
 @dataclass
 class BCPEModel(GAMLSSModel, distr=BCPE):
     mu: GAMLSSParam
@@ -161,3 +186,24 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
 
     def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
         return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau)
+
+
+@dataclass
+class BetaModel(GAMLSSModel, distr=stats.beta):
+    mu: GAMLSSParam
+    sigma: GAMLSSParam
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        return "a", "b"
+
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        mu, sigma = _interpolate_tuple(x, self.mu, self.sigma)
+        s2 = sigma**2
+        # var = s2 * mu * (1 - mu)
+        # nu = mu * (1 - mu) / var - 1
+        nu = 1 / s2 - 1
+        a = mu * nu
+        b = (1 - mu) * nu
+        return a, b
