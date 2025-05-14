@@ -5,7 +5,7 @@ import scipy.special as sc
 import scipy.stats as stats
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
-from .log_ext_ufunc import log1mexp, logsubexp
+from .log_ext_ufunc import logsubexp
 
 # LN_2 = np.log(2)
 LN_2 = 0.693147180559945309417232121458176568
@@ -71,12 +71,12 @@ def bcs_ppf(distr, p, mu, sigma, nu, *shape_params, **shape_kwds):
 def bcs_logcdf(distr, y, mu, sigma, nu, *shape_params, **shape_kwds):
     z = sc.boxcox(y / mu, nu) / sigma
     z_logcdf = distr.logcdf(z, *shape_params, **shape_kwds)
-    # lb_logcdf = distr.logcdf(-1 / (sigma * nu), *shape_params, **shape_kwds)
+    lb_logcdf = distr.logcdf(-1 / (sigma * nu), *shape_params, **shape_kwds)
     ub_logcdf = distr.logcdf(1 / (sigma * abs(nu)), *shape_params, **shape_kwds)
     return (
         np.where(
             nu > 0,
-            np.logaddexp(z_logcdf, log1mexp(-ub_logcdf)),
+            logsubexp(z_logcdf, lb_logcdf),
             z_logcdf,
         )
         - ub_logcdf
@@ -296,33 +296,3 @@ if stats._continuous_distns.gennorm_gen._munp is stats.rv_continuous._munp:
             return 0.0
 
     stats._continuous_distns.gennorm_gen._munp = _gennorm_munp
-
-
-# FIXME: verify & upstream
-if stats._continuous_distns.gennorm_gen._logcdf is stats.rv_continuous._logcdf:
-
-    def approx_gamma_logsf(x, s):
-        return (s - 1) * np.log(x) - x - sc.gammaln(s)
-
-    def _gennorm_logcdf(self, x, beta):
-        s = abs(x) ** beta
-        s_logsf = stats.gamma.logsf(s, 1 / beta)
-        s_logsf = np.where(np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta))
-        return np.where(
-            x >= 0,
-            log1mexp(-s_logsf + LN_2),
-            s_logsf - LN_2,
-        )
-
-    def _gennorm_logsf(self, x, beta):
-        s = abs(x) ** beta
-        s_logsf = stats.gamma.logsf(s, 1 / beta)
-        s_logsf = np.where(np.isfinite(s_logsf), s_logsf, approx_gamma_logsf(s, 1 / beta))
-        return np.where(
-            x >= 0,
-            s_logsf - LN_2,
-            log1mexp(-s_logsf + LN_2),
-        )
-
-    stats._continuous_distns.gennorm_gen._logcdf = _gennorm_logcdf
-    stats._continuous_distns.gennorm_gen._logsf = _gennorm_logsf
