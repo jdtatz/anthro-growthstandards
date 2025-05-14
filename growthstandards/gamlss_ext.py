@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import Any, Optional, TypeAlias
 
 import numpy as np
@@ -11,7 +12,7 @@ import scipy.stats as stats
 import xarray as xr
 import xarray_einstats.stats as xr_stats
 
-from .bcs_ext.scipy_ext import BCPE
+from .bcs_ext.scipy_ext import BCCG, BCPE
 
 GAMLSSParam: TypeAlias = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
 
@@ -46,7 +47,18 @@ class GAMLSSModel(ABC):
         return self._distr(**self._interpolate_param_dict(x))
 
     def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
-        return self._rv_type(**self._interpolate_param_dict(x))
+        params = self._interpolate_param_dict(x)
+        loc = params.pop("loc", None)
+        scale = params.pop("scale", None)
+        rv = self._rv_type(**params)
+        if loc is not None and scale is not None:
+            return loc + scale * rv
+        elif loc is not None:
+            return loc + rv
+        elif scale is not None:
+            return scale * rv
+        else:
+            return rv
 
     def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
         params = xr.apply_ufunc(self._interpolate_params, x)
@@ -118,6 +130,26 @@ class LogitLink(GAMLSSLinkFunction):
 
 
 @dataclass
+class LookupTable:
+    start: int
+    stop: int
+    step: int | float
+    fp: npt.ArrayLike
+    xp: npt.ArrayLike = field(init=False, repr=False)
+
+    def __post_init__(self):
+        if isinstance(self.step, Fraction):
+            n, d = self.step.numerator, self.step.denominator
+            self.xp = np.arange(d * self.start, d * self.stop + 1, n) / d
+        else:
+            self.xp = np.arange(self.start, self.stop + self.step, self.step)
+
+    def __call__(self, x: npt.ArrayLike, /):
+        x = np.asanyarray(x)
+        return np.interp(x, self.xp, self.fp)
+
+
+@dataclass
 class FractionalPolynomial:
     intercept: float
     coefficients: tuple[float, ...]
@@ -170,6 +202,49 @@ class PSpline:
     def __call__(self, x: npt.ArrayLike, /):
         x = np.asanyarray(x)
         return self.intercept + self.slope * x + self.spline(x)
+
+
+## FIXME: Use a better name. Would `UnitaryBCCGModel` be correct?
+@dataclass
+class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
+    """For Y ∼ BCS(μ, σ, 𝜈; r), if 𝜈 = 1 then Y has a truncated symmetric distribution with parameters μ and μσ and support (0, ∞)."""
+
+    loc: GAMLSSParam
+    scale: GAMLSSParam
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        return "a", "b", "loc", "scale"
+
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        loc, scale = _interpolate_tuple(x, self.loc, self.scale)
+        # NOTE: `a, b = (lb - loc) / scale, (ub - loc) / scale`
+        # lb, ub = 0, np.inf
+        a = -loc / scale
+        b = np.inf
+        return a, b, loc, scale
+
+    ## TODO: Is the only benefit to `truncnorm` over `truncate(Normal(...))` moment computation?
+    ## TODO: Is `truncate(Normal(...), lb=0)` better numerically than `truncnorm(a=-loc/scale, ...)`?
+    # def interpolate_rv(self, x: npt.ArrayLike, /):
+    #     loc, scale = _interpolate_tuple(x, self.loc, self.scale)
+    #     return stats.truncate(stats.Normal(mu=loc, sigma=scale), lb=0)
+
+
+@dataclass
+class BCCGModel(GAMLSSModel, distr=BCCG):
+    mu: GAMLSSParam
+    sigma: GAMLSSParam
+    nu: GAMLSSParam
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        return "mu", "sigma", "nu"
+
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        return _interpolate_tuple(x, self.mu, self.sigma, self.nu)
 
 
 @dataclass
