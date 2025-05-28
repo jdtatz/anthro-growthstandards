@@ -178,13 +178,15 @@ for p in sorted(table_dir.glob("*.xlsx")):
 # print(dt)
 # dt.to_zarr("test2.zarr", consolidated=False)
 
-prelude = """\
+prelude = f"""\
 import importlib.resources
 from fractions import Fraction
 
 import numpy as np
 
 from .gamlss_ext import *
+
+__all__ = {list(sorted(models.keys()))!r}
 
 _traversable = importlib.resources.files(__package__)
 with _traversable.joinpath("who_model_params.npz").open("rb") as _f:
