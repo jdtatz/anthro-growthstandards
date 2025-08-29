@@ -4,6 +4,7 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any, Optional, TypeAlias
 
+from array_api_extra import apply_where
 import numpy as np
 import numpy.typing as npt
 import scipy.interpolate as interpolate
@@ -282,3 +283,86 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
         a = mu * nu
         b = (1 - mu) * nu
         return a, b
+
+
+@dataclass
+class GAMLSSModelByCondition:
+    model1: GAMLSSModel
+    model2: GAMLSSModel
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        if self.model1._distr is not self.model2._distr:
+            raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
+
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        return self.model1._param_names
+
+    @abstractmethod
+    def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        ## TODO: use `apply_where` when it accepts tuple output
+        # return apply_where(cond, (x,), self.model1._interpolate_params, self.model2._interpolate_params, xp=np)
+        params1 = self.model1._interpolate_params(x)
+        params2 = self.model2._interpolate_params(x)
+        return tuple(np.where(cond, p1, p2) for p1, p2 in zip(params1, params2, strict=True))
+
+    def _interpolate_param_dict(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+        return dict(zip(self._param_names, self._interpolate_params(cond, x), strict=True))
+
+    def interpolate_distr(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> stats.rv_continuous:
+        return self.model1._distr(**self._interpolate_param_dict(cond, x))
+
+    def interpolate_rv(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /
+    ) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        params = self._interpolate_param_dict(cond, x)
+        loc = params.pop("loc", None)
+        scale = params.pop("scale", None)
+        rv = self.model1._rv_type(**params)
+        if loc is not None and scale is not None:
+            return loc + scale * rv
+        elif loc is not None:
+            return loc + rv
+        elif scale is not None:
+            return scale * rv
+        else:
+            return rv
+
+    ## Convenience Methods
+
+    def mean(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x,), self.model1.mean, self.model2.mean, xp=np)
+
+    def median(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x,), self.model1.median, self.model2.median, xp=np)
+
+    def pdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.pdf, self.model2.pdf, xp=np)
+
+    def logpdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.logpdf, self.model2.logpdf, xp=np)
+
+    def cdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.cdf, self.model2.cdf, xp=np)
+
+    def icdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, q), self.model1.icdf, self.model2.icdf, xp=np)
+
+    def ccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.ccdf, self.model2.ccdf, xp=np)
+
+    def iccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, q), self.model1.iccdf, self.model2.iccdf, xp=np)
+
+    def logcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.logcdf, self.model2.logcdf, xp=np)
+
+    def ilogcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, logp), self.model1.ilogcdf, self.model2.ilogcdf, xp=np)
+
+    def logccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, v), self.model1.logccdf, self.model2.logccdf, xp=np)
+
+    def ilogccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
+        return apply_where(cond, (x, logp), self.model1.ilogccdf, self.model2.ilogccdf, xp=np)
