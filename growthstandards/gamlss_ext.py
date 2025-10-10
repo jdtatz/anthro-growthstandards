@@ -4,14 +4,13 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import Any, Optional, TypeAlias
 
-from array_api_extra import apply_where
 import numpy as np
 import numpy.typing as npt
-import scipy.interpolate as interpolate
 import scipy.special
-import scipy.stats as stats
 import xarray as xr
 import xarray_einstats.stats as xr_stats
+from array_api_extra import apply_where
+from scipy import interpolate, stats
 
 from .bcs_ext.scipy_ext import BCCG, BCPE
 
@@ -54,17 +53,15 @@ class GAMLSSModel(ABC):
         rv = self._rv_type(**params)
         if loc is not None and scale is not None:
             return loc + scale * rv
-        elif loc is not None:
+        if loc is not None:
             return loc + rv
-        elif scale is not None:
+        if scale is not None:
             return scale * rv
-        else:
-            return rv
+        return rv
 
     def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
         params = xr.apply_ufunc(self._interpolate_params, x)
-        rv = xr_stats.XrContinuousRV(self._distr, *params)
-        return rv
+        return xr_stats.XrContinuousRV(self._distr, *params)
 
     ## Convenience Methods
 
@@ -322,12 +319,11 @@ class GAMLSSModelByCondition:
         rv = self.model1._rv_type(**params)
         if loc is not None and scale is not None:
             return loc + scale * rv
-        elif loc is not None:
+        if loc is not None:
             return loc + rv
-        elif scale is not None:
+        if scale is not None:
             return scale * rv
-        else:
-            return rv
+        return rv
 
     ## Convenience Methods
 

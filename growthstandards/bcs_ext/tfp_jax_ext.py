@@ -20,9 +20,10 @@ from tensorflow_probability.substrates.jax.distributions import (
 from tensorflow_probability.substrates.jax.internal import (
     dtype_util,
     parameter_properties,
+    samplers,
+    tensor_util,
 )
 from tensorflow_probability.substrates.jax.internal import prefer_static as ps
-from tensorflow_probability.substrates.jax.internal import samplers, tensor_util
 
 
 def boxcox(x, lmbda):
@@ -93,16 +94,16 @@ class BoxCoxSymmetric(distribution.AutoCompositeTensorDistribution):
 
     @classmethod
     def _parameter_properties(cls, dtype, num_classes=None):
-        return dict(
-            loc=parameter_properties.ParameterProperties(
+        return {
+            "loc": parameter_properties.ParameterProperties(
                 default_constraining_bijector_fn=(lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype)))
             ),
-            scale=parameter_properties.ParameterProperties(
+            "scale": parameter_properties.ParameterProperties(
                 default_constraining_bijector_fn=(lambda: softplus_bijector.Softplus(low=dtype_util.eps(dtype)))
             ),
-            nu=parameter_properties.ParameterProperties(),
-            std_distr=parameter_properties.BatchedComponentProperties(),
-        )
+            "nu": parameter_properties.ParameterProperties(),
+            "std_distr": parameter_properties.BatchedComponentProperties(),
+        }
 
     @property
     def loc(self):
@@ -225,16 +226,14 @@ class BoxCoxColeGreen(BoxCoxSymmetric):
     @classmethod
     def _parameter_properties(cls, dtype, num_classes=None):
         parent = super()._parameter_properties(dtype, num_classes)
-        subset = {k: p for k, p in parent.items() if k in ("loc", "scale", "nu")}
-        return subset
+        return {k: p for k, p in parent.items() if k in ("loc", "scale", "nu")}
 
     def _standard_moment(self, n):
         from scipy.special import factorial2
 
         if n % 2 == 0:
             return factorial2(n - 1)
-        else:
-            raise NotImplementedError
+        raise NotImplementedError
 
 
 class BoxCoxPowerExponential(BoxCoxSymmetric):
@@ -283,5 +282,4 @@ class BoxCoxPowerExponential(BoxCoxSymmetric):
                 * tf.math.gamma((n + 1) / self.power)
                 / tf.math.gamma(1 / self.power)
             )
-        else:
-            raise NotImplementedError
+        raise NotImplementedError

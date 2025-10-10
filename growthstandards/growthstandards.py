@@ -1,7 +1,6 @@
 import importlib.resources
-from collections.abc import Mapping
+from collections.abc import Iterator, Mapping
 from functools import lru_cache
-from typing import Iterator
 
 import numpy as np
 import scipy.stats
@@ -41,13 +40,13 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
         traversable = importlib.resources.files(__package__)
         store = zarr.storage.LocalStore(traversable.joinpath("growthstandards.zarr"))
         return xr.open_zarr(store=store, group=g, decode_times=False).load()
-    elif g == "len_hei":
+    if g == "len_hei":
         return xr.concat(
             [load_growthstandard_ds("length"), load_growthstandard_ds("height")],
             dim="age",
             combine_attrs="drop_conflicts",
         ).assign_attrs(long_name="Recumbent Length or Standing Height")
-    elif g == "bmi":
+    if g == "bmi":
         return xr.concat(
             [
                 load_growthstandard_ds("bmi_length"),
@@ -56,18 +55,17 @@ def load_growthstandard_ds(g: str) -> xr.Dataset:
             dim="age",
             combine_attrs="drop_conflicts",
         ).assign_attrs(long_name="Body Mass Index")
-    elif g == "gfl":
+    if g == "gfl":
         # Do not mutate
         gfl = load_growthstandard_ds("wfl").copy()
         gfl["m"] = gfl["m"] / gfl.coords["length"]
         return gfl.assign_attrs(long_name="Growth Metric for Recumbent Length", units="kg/cm")
-    elif g == "gfh":
+    if g == "gfh":
         # Do not mutate
         gfh = load_growthstandard_ds("wfh").copy()
         gfh["m"] = gfh["m"] / gfh.coords["height"]
         return gfh.assign_attrs(long_name="Growth Metric for Standing Height", units="kg/cm")
-    else:
-        raise KeyError(g)
+    raise KeyError(g)
 
 
 def try_simplify_bcs_rv(rv: xr_stats.XrContinuousRV):
@@ -92,8 +90,7 @@ class _GrowthStandards(Mapping):
             # Have to `interpolate_na` b/c the male & female models have coefficents at differing ages, and where they differ is filled with `NaN`.
             #   Using PCHIP 1-D monotonic cubic interpolation to preserve the shape, while being more accurate then linear
             return ds_to_rv(BCPE, gds.rename_vars({"tau": "beta"}).interpolate_na("age", method="pchip"))
-        else:
-            return ds_to_rv(BCCG, gds.rename_vars({"m": "mu", "s": "sigma", "l": "nu"}))
+        return ds_to_rv(BCCG, gds.rename_vars({"m": "mu", "s": "sigma", "l": "nu"}))
 
     def __iter__(self) -> Iterator:
         return iter(GROWTHSTANDARD_NAMES)

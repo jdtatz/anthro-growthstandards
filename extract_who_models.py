@@ -1,34 +1,34 @@
 #!/usr/bin/env python3
-from pathlib import Path
 from fractions import Fraction
 from functools import partial
+from pathlib import Path
 
 import numpy as np
 import numpy.typing as npt
 import pandas as pd
 import xarray as xr
 
-from growthstandards.gamlss_ext import LookupTable, BCCGModel, SimpleBCCGModel
+from growthstandards.gamlss_ext import BCCGModel, LookupTable, SimpleBCCGModel
 
-index_attr_map = dict(
-    age=dict(name="age", long_name="Age", units="days"),
-    length=dict(name="length", long_name="Recumbent Length", units="cm"),
-    height=dict(name="height", long_name="Standing Height", units="cm"),
-)
+index_attr_map = {
+    "age": {"name": "age", "long_name": "Age", "units": "days"},
+    "length": {"name": "length", "long_name": "Recumbent Length", "units": "cm"},
+    "height": {"name": "height", "long_name": "Standing Height", "units": "cm"},
+}
 
 
-var_attr_map = dict(
-    ac=dict(name="arm_c", long_name="Arm Circumference", units="cm"),
-    b=dict(name="bmi", long_name="Body Mass Index", units="kg/m^2"),
-    hc=dict(name="head_c", long_name="Head Circumference", units="cm"),
+var_attr_map = {
+    "ac": {"name": "arm_c", "long_name": "Arm Circumference", "units": "cm"},
+    "b": {"name": "bmi", "long_name": "Body Mass Index", "units": "kg/m^2"},
+    "hc": {"name": "head_c", "long_name": "Head Circumference", "units": "cm"},
     # lh=dict(name="len_hi", units="cm"),
-    lh=dict(name="len_hi", long_name="Recumbent Length/Standing Height", units="cm"),
-    ss=dict(name="ss", long_name="Subscapular Skinfold", units="mm"),
-    ts=dict(name="ts", long_name="Triceps Skinfold", units="mm"),
-    w=dict(name="weight", long_name="Weight", units="kg"),
-    wfl=dict(name="wfl", long_name="Weight for Recumbent Length", units="kg"),
-    wfh=dict(name="wfh", long_name="Weight for Standing Height", units="kg"),
-)
+    "lh": {"name": "len_hi", "long_name": "Recumbent Length/Standing Height", "units": "cm"},
+    "ss": {"name": "ss", "long_name": "Subscapular Skinfold", "units": "mm"},
+    "ts": {"name": "ts", "long_name": "Triceps Skinfold", "units": "mm"},
+    "w": {"name": "weight", "long_name": "Weight", "units": "kg"},
+    "wfl": {"name": "wfl", "long_name": "Weight for Recumbent Length", "units": "kg"},
+    "wfh": {"name": "wfh", "long_name": "Weight for Standing Height", "units": "kg"},
+}
 
 
 # lambda, df(mu), df(sigma), df(nu)
@@ -78,7 +78,7 @@ def scalar_or_lookuptable(x: npt.NDArray, v: npt.ArrayLike):
             # return LookupTable(start=start, stop=stop, step=step, fp=v)
             pass
         else:
-            assert False
+            raise TypeError(f"{step} is not an integer")
         # return f"LookupTable(xp=np.arange({x[0]}, {x[-1] + step}, {step}), fp=np.array({v.tolist()}))"
     elif np.allclose(udx, 0.1):
         # return f"LookupTable(xp=np.arange({int(10 * x[0])}, {int(10 * x[-1]) + 1})/10, fp=np.array({v.tolist()}))"
@@ -86,7 +86,7 @@ def scalar_or_lookuptable(x: npt.NDArray, v: npt.ArrayLike):
         # return LookupTable(start=start, stop=stop, step=step, fp=v)
     return LookupTable(start=start, stop=stop, step=step, fp=v)
     # return LookupTable(start=start, stop=stop, step=step, fp=np.asarray(v).tolist())
-    assert False, f"{udx}"
+    # assert False, f"{udx}"
     # return LookupTable(x, v)start=x[0], stop=x[-1]
 
 
@@ -96,7 +96,7 @@ models = {}
 prelude = """\
 from fractions import Fraction
 
-from .gamlss_ext import *
+from .gamlss_ext import BCCGModel, LookupTable, SimpleBCCGModel
 """
 print(prelude)
 
@@ -108,7 +108,7 @@ for p in sorted(table_dir.glob("*.xlsx")):
     sex = "male" if sex == "boys" else "female"
     assert _zscore == "zscore"
     assert _expanded == "expanded"
-    assert _tables == "table" or _tables == "tables"
+    assert _tables in {"table", "tables"}
     v_name, c_name = std_name.rsplit("f", 1)
     v_attrs = var_attr_map[v_name]
 
@@ -184,14 +184,13 @@ from fractions import Fraction
 
 import numpy as np
 
-from .gamlss_ext import *
+from .gamlss_ext import BCCGModel, LookupTable, SimpleBCCGModel
 
-__all__ = {list(sorted(models.keys()))!r}
+__all__ = {sorted(models.keys())!r}
 
 _traversable = importlib.resources.files(__package__)
-with _traversable.joinpath("who_model_params.npz").open("rb") as _f:
-    with np.load(_f) as npz:
-        _npz = dict(npz.items())
+with _traversable.joinpath("who_model_params.npz").open("rb") as _f, np.load(_f) as npz:
+    _npz = dict(npz.items())
 
 
 def _load(name: str) -> np.ndarray:

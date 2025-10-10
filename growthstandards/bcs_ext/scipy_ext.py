@@ -2,7 +2,7 @@ from functools import reduce
 
 import numpy as np
 import scipy.special as sc
-import scipy.stats as stats
+from scipy import stats
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
 from .log_ext_ufunc import logsubexp
@@ -292,7 +292,6 @@ if stats._continuous_distns.gennorm_gen._munp is stats.rv_continuous._munp:
     def _gennorm_munp(self, n, beta):
         if int(n) % 2 == 0:
             return np.exp(sc.gammaln((n + 1) / beta) - sc.gammaln(1 / beta))
-        else:
-            return 0.0
+        return 0.0
 
     stats._continuous_distns.gennorm_gen._munp = _gennorm_munp

@@ -3,7 +3,7 @@ from fractions import Fraction
 
 import numpy as np
 
-from .gamlss_ext import *
+from .gamlss_ext import BCCGModel, LookupTable, SimpleBCCGModel
 
 __all__ = [
     "acfa_female",
@@ -27,9 +27,8 @@ __all__ = [
 ]
 
 _traversable = importlib.resources.files(__package__)
-with _traversable.joinpath("who_model_params.npz").open("rb") as _f:
-    with np.load(_f) as npz:
-        _npz = dict(npz.items())
+with _traversable.joinpath("who_model_params.npz").open("rb") as _f, np.load(_f) as npz:
+    _npz = dict(npz.items())
 
 
 def _load(name: str) -> np.ndarray:
