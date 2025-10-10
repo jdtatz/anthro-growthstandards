@@ -26,4 +26,63 @@ zip-safe = false
 line-length = 120
 
 [tool.isort]
+line-length = 120
 profile = "black"
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E",
+    # Pyflakes
+    "F",
+    # Pylint
+    "PL",
+    # pyupgrade
+    "UP",
+    # Ruff-specific rules
+    "RUF",
+    # NumPy-specific rules
+    "NPY",
+    # flake8-bugbear
+    "B",
+    # flake8-comprehensions
+    "C4",
+    # flake8-boolean-trap
+    "FBT",
+    # flake8-return
+    "RET",
+    # flake8-simplify
+    "SIM",
+    # isort
+    "I",
+]
+ignore = [
+    "F401",    # unused-import
+    "UP045",   # non-pep604-annotation-optional
+    "RUF001",  # ambiguous-unicode-character-string
+    "RUF002",  # ambiguous-unicode-character-docstring
+    "RUF003",  # ambiguous-unicode-character-comment
+    "PLC0415", # import-outside-top-level
+    "PLR0913", # too-many-arguments
+
+    # These are enforced by, or incompatible with, the ruff formatter:
+    "E203", # whitespace-before-punctuation
+    "E501", # line-too-long
+]
+
+[tool.ruff.lint.per-file-ignores]
+"growthstandards/xr_stats_ext.py" = [
+    "FBT",
+    "B905", # zip-without-explicit-strict
+]
+"growthstandards/bcs_ext/scipy_ext.py" = [
+    "FBT003", # boolean-positional-value-in-call
+]
+"growthstandards/bcs_ext/tfp_jax_ext.py" = [
+    "FBT",
+    "PLE0101", # return-in-init
+    "PLR1704", # redefined-argument-from-local
+]
