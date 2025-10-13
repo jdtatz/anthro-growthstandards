@@ -92,6 +92,7 @@ def scalar_or_lookuptable(x: npt.NDArray, v: npt.ArrayLike):
 
 dt = xr.DataTree()
 models = {}
+std_model_names = set()
 
 prelude = """\
 from fractions import Fraction
@@ -161,6 +162,7 @@ for p in sorted(table_dir.glob("*.xlsx")):
     print(f"{std_name}_{sex} = {model}")
     models[f"{std_name}_{sex}"] = model
     # print()
+    std_model_names.add(std_name)
 
     # dims = (index_name,)
     # ds = xr.Dataset(
@@ -178,15 +180,27 @@ for p in sorted(table_dir.glob("*.xlsx")):
 # print(dt)
 # dt.to_zarr("test2.zarr", consolidated=False)
 
+all_model_names = []
+std_models = {}
+for std_name in sorted(std_model_names):
+    f_model = models[f"{std_name}_female"]
+    m_model = models[f"{std_name}_male"]
+    assert f_model.attrs == m_model.attrs
+    std_models[std_name] = (f_model, m_model)
+    all_model_names.append(std_name)
+    all_model_names.append(f"{std_name}_female")
+    all_model_names.append(f"{std_name}_male")
+
+
 prelude = f"""\
 import importlib.resources
 from fractions import Fraction
 
 import numpy as np
 
-from .gamlss_ext import BCCGModel, LookupTable, SimpleBCCGModel
+from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
 
-__all__ = {sorted(models.keys())!r}
+__all__ = {sorted(all_model_names)!r}
 
 _traversable = importlib.resources.files(__package__)
 with _traversable.joinpath("who_model_params.npz").open("rb") as _f, np.load(_f) as npz:
@@ -202,22 +216,29 @@ with open("growthstandards/who_models.py", "w") as f:
     fprint = partial(print, file=f)
     fprint(prelude)
     npz = {}
-    for name, model in sorted(models.items()):
-        if isinstance(model, BCCGModel):
-            fprint(f"{name} = BCCGModel(")
-            _param_names = "mu", "sigma", "nu"
-        else:
-            fprint(f"{name} = SimpleBCCGModel(")
-            _param_names = "loc", "scale"
-        for p in _param_names:
-            param = getattr(model, p)
-            if isinstance(param, LookupTable):
-                npz_name = f"{name}_{p}"
-                npz[npz_name] = param.fp
-                sval = f'LookupTable(start={param.start!r}, stop={param.stop!r}, step={param.step!r}, fp=_load("{npz_name}"))'
+    for std_name, (f_model, m_model) in std_models.items():
+        for name, model in ((f"{std_name}_female", f_model), (f"{std_name}_male", m_model)):
+            if isinstance(model, BCCGModel):
+                fprint(f"{name} = BCCGModel(")
+                _param_names = "mu", "sigma", "nu"
             else:
-                sval = str(param)
-            fprint(f"    {p}={sval},")
-        fprint(f"    attrs={model.attrs!r},")
+                fprint(f"{name} = SimpleBCCGModel(")
+                _param_names = "loc", "scale"
+            for p in _param_names:
+                param = getattr(model, p)
+                if isinstance(param, LookupTable):
+                    npz_name = f"{name}_{p}"
+                    npz[npz_name] = param.fp
+                    sval = f'LookupTable(start={param.start!r}, stop={param.stop!r}, step={param.step!r}, fp=_load("{npz_name}"))'
+                else:
+                    sval = str(param)
+                fprint(f"    {p}={sval},")
+            fprint(f"    attrs={model.attrs!r},")
+            fprint(")")
+        comb_attrs = {**f_model.attrs, "cond_name": "is_female", "cond_long_name": "sex = Female"}
+        fprint(f"{std_name} = GAMLSSModelByCondition(")
+        fprint(f"    {std_name}_female,")
+        fprint(f"    {std_name}_male,")
+        fprint(f"    attrs={comb_attrs!r},")
         fprint(")")
 np.savez_compressed("growthstandards/who_model_params.npz", allow_pickle=False, **npz)
