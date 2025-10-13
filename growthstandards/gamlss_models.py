@@ -18,7 +18,8 @@ __all__ = [
     # "ciratioM_beta",
 ]
 
-hcff = BCPEModel(
+
+hcflh_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-274.7848237296913,
         coefficients=(-149.84508855999425, -48.00727849400349, 324.87772798513777),
@@ -29,9 +30,17 @@ hcff = BCPEModel(
     sigma=LogLink(-3.5834762072532387),
     nu=-0.5756035007094116,
     tau=LogLink(0.5563002460403006),
-    attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
+    attrs={
+        "long_name": "Head Circumference",
+        "units": "cm",
+        "x_name": "len_hi",
+        "x_long_name": "Recumbent Length / Standing Height",
+        "x_units": "cm",
+    },
 )
-hcmm = BCPEModel(
+# DEPRECATED
+hcff = hcflh_female
+hcflh_male = BCPEModel(
     mu=FractionalPolynomial(
         intercept=692.5722663851999,
         coefficients=(-641.4702714565977, -309.7469221642888, 72.44232181418973),
@@ -42,9 +51,17 @@ hcmm = BCPEModel(
     sigma=LogLink(-3.6385438880994867),
     nu=-0.020559517437386845,
     tau=LogLink(0.4495271825950411),
-    attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
+    attrs={
+        "long_name": "Head Circumference",
+        "units": "cm",
+        "x_name": "len_hi",
+        "x_long_name": "Recumbent Length / Standing Height",
+        "x_units": "cm",
+    },
 )
-hcxx = BCPEModel(
+# DEPRECATED
+hcmm = hcflh_male
+hcflh_xx = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-422.2940844051155,
         coefficients=(126.44541423086386, -398.12576972488137, 346.5552682948275),
@@ -55,9 +72,17 @@ hcxx = BCPEModel(
     sigma=LogLink(-3.5738656336728867),
     nu=-0.28912191253351954,
     tau=LogLink(0.5328533922094477),
-    attrs={"long_name": "Head Circumference", "units": "cm", "x_long_name": "Height", "x_units": "cm"},
+    attrs={
+        "long_name": "Head Circumference",
+        "units": "cm",
+        "x_name": "len_hi",
+        "x_long_name": "Recumbent Length / Standing Height",
+        "x_units": "cm",
+    },
 )
-csfFF = BCPEModel(
+# DEPRECATED
+hcxx = hcflh_xx
+cvfa_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=174.36608687335067,
         coefficients=(0.4198602329356907, -17.850485999978638, 0.10215264932793458),
@@ -68,9 +93,11 @@ csfFF = BCPEModel(
     sigma=LogLink(-1.615757113209806),
     nu=0.42546112691657323,
     tau=LogLink(0.17507009002314125),
-    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-csfMM = BCPEModel(
+# DEPRECATED
+csfFF = cvfa_female
+cvfa_male = BCPEModel(
     mu=FractionalPolynomial(
         intercept=190.4495277278507,
         coefficients=(0.44937314250337496, -19.16707542424443, 0.10453302112506725),
@@ -81,9 +108,11 @@ csfMM = BCPEModel(
     sigma=LogLink(-1.5987646631876429),
     nu=0.6562282247254976,
     tau=LogLink(0.17380717231195147),
-    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-tissFF = BCPEModel(
+# DEPRECATED
+csfMM = cvfa_male
+bvfa_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-32.40188886990359,
         coefficients=(6.8243795721453555, 1029.4548916362535, -302.4064745323913),
@@ -94,9 +123,11 @@ tissFF = BCPEModel(
     sigma=LogLink(-2.5310152523814264),
     nu=-0.4708322009246219,
     tau=LogLink(0.7144038214357605),
-    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-tissMM = BCPEModel(
+# DEPRECATED
+tissFF = bvfa_female
+bvfa_male = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-85.36920326404015,
         coefficients=(7.81838294854985, 1187.17576187236, -348.1199770487963),
@@ -107,10 +138,12 @@ tissMM = BCPEModel(
     sigma=LogLink(-2.6171047897119526),
     nu=0.6989205425456295,
     tau=LogLink(0.40047791511800596),
-    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
+# DEPRECATED
+tissMM = bvfa_male
 ## FIXME: broken upstream
-_ratioF = BCPEModel(
+_bv_cv_ratio_for_age_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=11.082874194353732,
         coefficients=(-4.805927794274573, 3.3948503231064917, -1.021721471224189),
@@ -121,10 +154,12 @@ _ratioF = BCPEModel(
     sigma=LogLink(-1.6170309696939928),
     nu=0.05701029564202015,
     tau=LogLink(0.3832294345648013),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
+# DEPRECATED
+_ratioF = _bv_cv_ratio_for_age_female
 ## FIXME: broken upstream
-_ratioM = BCPEModel(
+_bv_cv_ratio_for_age_male = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-10.811516509095394,
         coefficients=(-2.580157458459326, 17.191469945479266, -4.655185756173699),
@@ -135,9 +170,11 @@ _ratioM = BCPEModel(
     sigma=LogLink(-1.6422083676281767),
     nu=-0.7371007188630626,
     tau=LogLink(0.10333210663154822),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-tcF = BCPEModel(
+# DEPRECATED
+_ratioM = _bv_cv_ratio_for_age_male
+bv_cv_ratio_for_age_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=7.451604029302721,
         coefficients=(1.9311003202293868, 0.2614952054465591, -0.9333994900219552),
@@ -148,9 +185,11 @@ tcF = BCPEModel(
     sigma=LogLink(-1.7177909182272781),
     nu=0.23164241283324605,
     tau=LogLink(0.45456869049681214),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-tcM = BCPEModel(
+# DEPRECATED
+tcF = bv_cv_ratio_for_age_female
+bv_cv_ratio_for_age_male = BCPEModel(
     mu=FractionalPolynomial(
         intercept=7.538670088628258,
         coefficients=(2.2650666623903875, 0.3319242947160484, -1.0650611097770506),
@@ -161,10 +200,13 @@ tcM = BCPEModel(
     sigma=LogLink(-1.7492290015068284),
     nu=0.019907631818795388,
     tau=LogLink(0.29597479412370803),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
 )
-ciratioF = BCPEModel(
+# DEPRECATED
+tcM = bv_cv_ratio_for_age_male
+cv_icv_prop_for_age_female = BCPEModel(
     mu=PSpline(
+        domain=(14, 8131),
         intercept=0.1297789277794307,
         slope=6.923203390882593e-07,
         spline_coefficients=(
@@ -193,15 +235,22 @@ ciratioF = BCPEModel(
             0.03427722496953207,
         ),
         spline_degree=3,
-        domain=(14.0, 8131.0),
     ),
-    sigma=0.15598339768084085,
+    sigma=LogLink(-1.8580057025189702),
     nu=-0.05880935174072106,
-    tau=1.6410687617657573,
-    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion", "x_long_name": "Age", "x_units": "days"},
+    tau=LogLink(0.49534771358580737),
+    attrs={
+        "long_name": "CSF Volume / Intracranial Volume Proportion",
+        "x_name": "age",
+        "x_long_name": "Age",
+        "x_units": "days",
+    },
 )
-ciratioM = BCPEModel(
+# DEPRECATED
+ciratioF = cv_icv_prop_for_age_female
+cv_icv_prop_for_age_male = BCPEModel(
     mu=PSpline(
+        domain=(13, 8073),
         intercept=0.13444173398569476,
         slope=-7.331276817827039e-07,
         spline_coefficients=(
@@ -230,14 +279,20 @@ ciratioM = BCPEModel(
             0.026009552583848003,
         ),
         spline_degree=3,
-        domain=(13.0, 8073.0),
     ),
-    sigma=0.14999937336600924,
+    sigma=LogLink(-1.8971241624545456),
     nu=0.15514658132713416,
-    tau=1.4008882724041993,
-    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion", "x_long_name": "Age", "x_units": "days"},
+    tau=LogLink(0.3371065157124078),
+    attrs={
+        "long_name": "CSF Volume / Intracranial Volume Proportion",
+        "x_name": "age",
+        "x_long_name": "Age",
+        "x_units": "days",
+    },
 )
-ciratioF_beta = BetaModel(
+# DEPRECATED
+ciratioM = cv_icv_prop_for_age_male
+cv_icv_prop_for_age_beta_female = BetaModel(
     mu=LogitLink(
         PSpline(
             domain=(14, 8131),
@@ -304,9 +359,16 @@ ciratioF_beta = BetaModel(
             spline_degree=3,
         )
     ),
-    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion", "x_long_name": "Age", "x_units": "days"},
+    attrs={
+        "long_name": "CSF Volume / Intracranial Volume Proportion",
+        "x_name": "age",
+        "x_long_name": "Age",
+        "x_units": "days",
+    },
 )
-ciratioM_beta = BetaModel(
+# DEPRECATED
+ciratioF_beta = cv_icv_prop_for_age_beta_female
+cv_icv_prop_for_age_beta_male = BetaModel(
     mu=LogitLink(
         PSpline(
             domain=(13, 8073),
@@ -373,5 +435,12 @@ ciratioM_beta = BetaModel(
             spline_degree=3,
         )
     ),
-    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion", "x_long_name": "Age", "x_units": "days"},
+    attrs={
+        "long_name": "CSF Volume / Intracranial Volume Proportion",
+        "x_name": "age",
+        "x_long_name": "Age",
+        "x_units": "days",
+    },
 )
+# DEPRECATED
+ciratioM_beta = cv_icv_prop_for_age_beta_male
