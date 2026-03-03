@@ -11,6 +11,8 @@ import xarray as xr
 import xarray_einstats.stats as xr_stats
 from array_api_extra import apply_where
 from scipy import interpolate, stats
+from scipy.integrate import tanhsinh
+from scipy.optimize.elementwise import find_root
 
 from .bcs_ext.scipy_ext import BCCG, BCPE
 
@@ -324,6 +326,129 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
 
     def _domain(self) -> tuple[int | float, int | float]:
         return _merge_param_domains(self.mu, self.sigma)
+
+
+# WIP
+@dataclass
+class CompoundGAMLSSModel:
+    cond_model: GAMLSSModel
+    # TODO: multiple marginal models?
+    marginal_model: GAMLSSModel
+    attrs: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        self.attrs |= {k: v for k, v in self.cond_model.attrs.items() if not k.startswith("x_")} | {
+            k: v for k, v in self.marginal_model.attrs.items() if k.startswith("x_")
+        }
+
+    @property
+    def _param_names(self) -> tuple[str, ...]:
+        raise NotImplementedError
+
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        raise NotImplementedError
+
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+        raise NotImplementedError
+
+    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
+        raise NotImplementedError
+
+    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        raise NotImplementedError
+
+    def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
+        raise NotImplementedError
+
+    def _integrate(
+        self,
+        fn: str,
+        log: bool,
+        x: npt.ArrayLike,
+        v: npt.ArrayLike,
+        *,
+        maxlevel: int | None = None,
+        minlevel: int = 2,
+        atol: float | None = None,
+        rtol: float | None = None,
+    ):
+        ifn: Callable[[npt.ArrayLike, npt.ArrayLike], npt.NDArray] = getattr(self.cond_model, fn)
+
+        def _integrand(m, x, v):
+            if log:
+                return self.marginal_model.logpdf(x, m) + ifn(m, v)
+            else:
+                return self.marginal_model.pdf(x, m) * ifn(m, v)
+
+        a, b = self.cond_model._domain()
+        res = tanhsinh(
+            _integrand, a, b, args=(x, v), log=log, maxlevel=maxlevel, minlevel=minlevel, atol=atol, rtol=rtol
+        )
+        # TODO: return other info?
+        return res
+
+    def _iroot(
+        self,
+        bfn: str,
+        ifn: str,
+        log: bool,
+        x: npt.ArrayLike,
+        q: npt.ArrayLike,
+        *,
+        tolerances: dict | None = None,
+        maxiter: int | None = None,
+        **integrate_kwargs,
+    ):
+        bfn: Callable[[npt.ArrayLike, npt.ArrayLike], npt.NDArray] = getattr(self.cond_model, bfn)
+
+        def _inner(v, x, q):
+            return self._integrate(ifn, log, x, v, **integrate_kwargs).integral - q
+
+        a, b = self.cond_model._domain()
+        min_q = bfn(a, q)
+        max_q = bfn(b, q)
+        res = find_root(_inner, (min_q, max_q), args=(x, q), tolerances=tolerances, maxiter=maxiter)
+        # TODO: return other info?
+        return res
+
+    ##
+
+    def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        # TODO: icdf, iccdf, ilogcdf, or ilogccdf?
+        return self.icdf(x, 0.5)
+
+    def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("pdf", False, x, v)
+
+    def logpdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("logpdf", True, x, v)
+
+    def cdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("cdf", False, x, v)
+
+    def icdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
+        return self._iroot("icdf", "cdf", False, x, q)
+
+    def ccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("ccdf", False, x, v)
+
+    def iccdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
+        return self._iroot("iccdf", "ccdf", False, x, q)
+
+    def logcdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("logcdf", True, x, v)
+
+    def ilogcdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
+        return self._iroot("ilogcdf", "logcdf", True, x, logp)
+
+    def logccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
+        return self._integrate("logccdf", True, x, v)
+
+    def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
+        return self._iroot("ilogccdf", "logccdf", True, x, logp)
 
 
 @dataclass
