@@ -131,7 +131,7 @@ class LogitLink(GAMLSSLinkFunction):
 class LookupTable:
     start: int
     stop: int
-    step: int | float
+    step: int | Fraction
     fp: npt.ArrayLike
     xp: npt.ArrayLike = field(init=False, repr=False)
 
