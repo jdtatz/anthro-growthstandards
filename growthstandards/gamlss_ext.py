@@ -146,6 +146,16 @@ class LookupTable:
         x = np.asanyarray(x)
         return np.interp(x, self.xp, self.fp)
 
+    def __getitem__(self, key: slice):
+        if not isinstance(key, slice):
+            raise TypeError("LookupTable only supports subslicing")
+        if not isinstance(self.step, int):
+            raise NotImplementedError("Can only slice LookupTables with `int` steps")
+        new_range = range(self.start, self.stop + self.step, self.step)[key]
+        return LookupTable(
+            start=new_range.start, stop=new_range.stop - new_range.step, step=new_range.step, fp=self.fp[key]
+        )
+
 
 @dataclass
 class FractionalPolynomial:
