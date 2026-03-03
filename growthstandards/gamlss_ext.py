@@ -25,6 +25,17 @@ def _interpolate_tuple(x: npt.ArrayLike, *ps: GAMLSSParam):
     return tuple(_interpolate(x, p) for p in ps)
 
 
+def _param_domain(p: GAMLSSParam) -> None | tuple[int | float, int | float]:
+    return None if isinstance(p, (int, float)) or not hasattr(p, "domain") else p.domain
+
+
+def _merge_param_domains(*ps: GAMLSSParam) -> tuple[int | float, int | float]:
+    ls, us = zip(*filter(lambda d: d is not None, map(_param_domain, ps)), strict=True)
+    l = min(ls, default=-np.inf)
+    u = max(us, default=+np.inf)
+    return l, u
+
+
 class GAMLSSModel(ABC):
     def __init_subclass__(
         cls,
@@ -62,6 +73,9 @@ class GAMLSSModel(ABC):
     def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
         params = xr.apply_ufunc(self._interpolate_params, x)
         return xr_stats.XrContinuousRV(self._distr, *params)
+
+    @abstractmethod
+    def _domain(self) -> tuple[int | float, int | float]: ...
 
     ## Convenience Methods
 
@@ -110,6 +124,10 @@ class GAMLSSLinkFunction(ABC):
         name = type(self).__name__
         return f"{name}({self.inner!r})"
 
+    @property
+    def domain(self) -> None | tuple[int | float, int | float]:
+        return _param_domain(self.inner)
+
     @abstractmethod
     def forward(self, value: npt.ArrayLike) -> npt.ArrayLike: ...
 
@@ -141,6 +159,10 @@ class LookupTable:
             self.xp = np.arange(d * self.start, d * self.stop + 1, n) / d
         else:
             self.xp = np.arange(self.start, self.stop + self.step, self.step)
+
+    @property
+    def domain(self) -> tuple[int, int]:
+        return self.start, self.stop
 
     def __call__(self, x: npt.ArrayLike, /):
         x = np.asanyarray(x)
@@ -239,6 +261,9 @@ class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
     #     loc, scale = _interpolate_tuple(x, self.loc, self.scale)
     #     return stats.truncate(stats.Normal(mu=loc, sigma=scale), lb=0)
 
+    def _domain(self) -> tuple[int | float, int | float]:
+        return _merge_param_domains(self.loc, self.scale)
+
 
 @dataclass
 class BCCGModel(GAMLSSModel, distr=BCCG):
@@ -253,6 +278,9 @@ class BCCGModel(GAMLSSModel, distr=BCCG):
 
     def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
         return _interpolate_tuple(x, self.mu, self.sigma, self.nu)
+
+    def _domain(self) -> tuple[int | float, int | float]:
+        return _merge_param_domains(self.mu, self.sigma, self.nu)
 
 
 @dataclass
@@ -269,6 +297,9 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
 
     def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
         return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau)
+
+    def _domain(self) -> tuple[int | float, int | float]:
+        return _merge_param_domains(self.mu, self.sigma, self.nu)
 
 
 @dataclass
@@ -290,6 +321,9 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
         a = mu * nu
         b = (1 - mu) * nu
         return a, b
+
+    def _domain(self) -> tuple[int | float, int | float]:
+        return _merge_param_domains(self.mu, self.sigma, self.nu)
 
 
 @dataclass
@@ -334,6 +368,12 @@ class GAMLSSModelByCondition:
         if scale is not None:
             return scale * rv
         return rv
+
+    def _domain(self):
+        # TODO: how to handle when models' domains differ
+        # l1, u1 = self.model1._domain()
+        # l2, u2 = self.model2._domain()
+        raise NotImplementedError
 
     ## Convenience Methods
 
