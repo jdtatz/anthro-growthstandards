@@ -53,8 +53,6 @@ select = [
     "C4",
     # flake8-boolean-trap
     "FBT",
-    # flake8-return
-    "RET",
     # flake8-simplify
     "SIM",
     # isort

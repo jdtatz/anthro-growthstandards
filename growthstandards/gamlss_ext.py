@@ -33,9 +33,9 @@ def _param_domain(p: GAMLSSParam) -> None | tuple[int | float, int | float]:
 
 def _merge_param_domains(*ps: GAMLSSParam) -> tuple[int | float, int | float]:
     ls, us = zip(*filter(lambda d: d is not None, map(_param_domain, ps)), strict=True)
-    l = min(ls, default=-np.inf)
-    u = max(us, default=+np.inf)
-    return l, u
+    lb = min(ls, default=-np.inf)
+    ub = max(us, default=+np.inf)
+    return lb, ub
 
 
 class GAMLSSModel(ABC):
@@ -363,7 +363,7 @@ class CompoundGAMLSSModel:
     def _integrate(
         self,
         fn: str,
-        log: bool,
+        log: bool,  # noqa: FBT001
         x: npt.ArrayLike,
         v: npt.ArrayLike,
         *,
@@ -391,7 +391,7 @@ class CompoundGAMLSSModel:
         self,
         bfn: str,
         ifn: str,
-        log: bool,
+        log: bool,  # noqa: FBT001
         x: npt.ArrayLike,
         q: npt.ArrayLike,
         *,
@@ -419,6 +419,8 @@ class CompoundGAMLSSModel:
     def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
         # TODO: icdf, iccdf, ilogcdf, or ilogccdf?
         return self.icdf(x, 0.5)
+
+    # ruff: disable[FBT003]
 
     def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
         return self._integrate("pdf", False, x, v)
@@ -449,6 +451,8 @@ class CompoundGAMLSSModel:
 
     def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
         return self._iroot("ilogccdf", "logccdf", True, x, logp)
+
+    # ruff: enable[FBT003]
 
 
 @dataclass
