@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from fractions import Fraction
-from typing import Any, Optional, TypeAlias
+from typing import Any, Optional
 
 import numpy as np
 import numpy.typing as npt
@@ -16,7 +16,7 @@ from scipy.optimize.elementwise import find_root
 
 from .bcs_ext.scipy_ext import BCCG, BCPE
 
-GAMLSSParam: TypeAlias = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
+type GAMLSSParam = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
 
 
 def _interpolate(x: npt.ArrayLike, p: GAMLSSParam):
