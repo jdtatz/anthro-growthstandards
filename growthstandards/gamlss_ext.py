@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from fractions import Fraction
+from math import lcm
 from typing import Any, Optional
 
 import numpy as np
@@ -27,7 +28,7 @@ def _interpolate_tuple(x: npt.ArrayLike, *ps: GAMLSSParam):
     return tuple(_interpolate(x, p) for p in ps)
 
 
-def _param_domain(p: GAMLSSParam) -> None | tuple[int | float, int | float]:
+def _param_domain(p: GAMLSSParam) -> None | tuple[int | float | Fraction, int | float | Fraction]:
     return None if isinstance(p, (int, float)) or not hasattr(p, "domain") else p.domain
 
 
@@ -35,7 +36,7 @@ def _merge_param_domains(*ps: GAMLSSParam) -> tuple[int | float, int | float]:
     ls, us = zip(*filter(lambda d: d is not None, map(_param_domain, ps)), strict=True)
     lb = min(ls, default=-np.inf)
     ub = max(us, default=+np.inf)
-    return lb, ub
+    return (int(lb) if lb.is_integer() else float(lb)), (int(ub) if ub.is_integer() else float(ub))
 
 
 class GAMLSSModel(ABC):
@@ -127,7 +128,7 @@ class GAMLSSLinkFunction(ABC):
         return f"{name}({self.inner!r})"
 
     @property
-    def domain(self) -> None | tuple[int | float, int | float]:
+    def domain(self) -> None | tuple[int | float | Fraction, int | float | Fraction]:
         return _param_domain(self.inner)
 
     @abstractmethod
@@ -149,21 +150,31 @@ class LogitLink(GAMLSSLinkFunction):
 
 @dataclass
 class LookupTable:
-    start: int
-    stop: int
+    start: int | Fraction
+    stop: int | Fraction
     step: int | Fraction
     fp: npt.ArrayLike
     xp: npt.ArrayLike = field(init=False, repr=False)
 
-    def __post_init__(self):
-        if isinstance(self.step, Fraction):
-            n, d = self.step.numerator, self.step.denominator
-            self.xp = np.arange(d * self.start, d * self.stop + 1, n) / d
+    def _parts(self):
+        parts = (self.start, self.stop, self.step)
+        if any(isinstance(v, Fraction) for v in parts):
+            d = lcm(*(v.denominator for v in parts))
+            assert all((d * v).is_integer() for v in parts)
+            return *(int(d * v) for v in parts), 1, lambda v: Fraction(v, d) if isinstance(v, int) else v / d
         else:
-            self.xp = np.arange(self.start, self.stop + self.step, self.step)
+            return *parts, self.step, lambda v: v
+
+    def __post_init__(self):
+        n, r = divmod(self.stop - self.start, self.step)
+        if r != 0:
+            raise ValueError("`stop - start` is not an integral multiple of `step`")
+        start, stop, step, offset, apply_denom = self._parts()
+        self.xp = apply_denom(np.arange(start, stop + offset, step))
+        assert self.xp.shape == (1 + n,), f"{self.xp.shape} != {(1 + n,)}"
 
     @property
-    def domain(self) -> tuple[int, int]:
+    def domain(self) -> tuple[int | Fraction, int | Fraction]:
         return self.start, self.stop
 
     def __call__(self, x: npt.ArrayLike, /):
@@ -173,12 +184,18 @@ class LookupTable:
     def __getitem__(self, key: slice):
         if not isinstance(key, slice):
             raise TypeError("LookupTable only supports subslicing")
-        if not isinstance(self.step, int):
-            raise NotImplementedError("Can only slice LookupTables with `int` steps")
-        new_range = range(self.start, self.stop + self.step, self.step)[key]
-        return LookupTable(
-            start=new_range.start, stop=new_range.stop - new_range.step, step=new_range.step, fp=self.fp[key]
+        elif key.step is not None and key.step != 1:
+            raise NotImplementedError("LookupTable only supports contiguous subslicing")
+        start, stop, step, offset, apply_denom = self._parts()
+        new_range = range(start, stop + offset, step)[key]
+        res = LookupTable(
+            start=apply_denom(new_range.start),
+            stop=apply_denom(new_range.stop - offset),
+            step=apply_denom(new_range.step),
+            fp=self.fp[key],
         )
+        assert np.all(self.xp[key] == res.xp)
+        return res
 
 
 @dataclass
