@@ -48,355 +48,166 @@ acfa_female = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("acfa_female_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("acfa_female_sigma")),
     nu=-0.1733,
-    attrs={
-        "name": "arm_c",
-        "long_name": "Arm Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "arm_c", "long_name": "Arm Circumference", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 acfa_male = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("acfa_male_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("acfa_male_sigma")),
     nu=LookupTable(start=91, stop=1856, step=1, fp=_load("acfa_male_nu")),
-    attrs={
-        "name": "arm_c",
-        "long_name": "Arm Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "arm_c", "long_name": "Arm Circumference", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 acfa = GAMLSSModelByCondition(
     acfa_female,
     acfa_male,
-    attrs={
-        "name": "arm_c",
-        "long_name": "Arm Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 bfa_female = BCCGModel(
     mu=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_female_mu")),
     sigma=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_female_sigma")),
     nu=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_female_nu")),
-    attrs={
-        "name": "bmi",
-        "long_name": "Body Mass Index",
-        "units": "kg/m^2",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "bmi", "long_name": "Body Mass Index", "units": "kg/m^2"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 bfa_male = BCCGModel(
     mu=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_male_mu")),
     sigma=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_male_sigma")),
     nu=LookupTable(start=0, stop=1856, step=1, fp=_load("bfa_male_nu")),
-    attrs={
-        "name": "bmi",
-        "long_name": "Body Mass Index",
-        "units": "kg/m^2",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "bmi", "long_name": "Body Mass Index", "units": "kg/m^2"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 bfa = GAMLSSModelByCondition(
     bfa_female,
     bfa_male,
-    attrs={
-        "name": "bmi",
-        "long_name": "Body Mass Index",
-        "units": "kg/m^2",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 hcfa_female = SimpleBCCGModel(
     loc=LookupTable(start=0, stop=1856, step=1, fp=_load("hcfa_female_loc")),
     scale=LookupTable(start=0, stop=1856, step=1, fp=_load("hcfa_female_scale")),
-    attrs={
-        "name": "head_c",
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "head_c", "long_name": "Head Circumference", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 hcfa_male = SimpleBCCGModel(
     loc=LookupTable(start=0, stop=1856, step=1, fp=_load("hcfa_male_loc")),
     scale=LookupTable(start=0, stop=1856, step=1, fp=_load("hcfa_male_scale")),
-    attrs={
-        "name": "head_c",
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "head_c", "long_name": "Head Circumference", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 hcfa = GAMLSSModelByCondition(
     hcfa_female,
     hcfa_male,
-    attrs={
-        "name": "head_c",
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 lhfa_female = SimpleBCCGModel(
     loc=LookupTable(start=0, stop=1856, step=1, fp=_load("lhfa_female_loc")),
     scale=LookupTable(start=0, stop=1856, step=1, fp=_load("lhfa_female_scale")),
-    attrs={
-        "name": "len_hi",
-        "long_name": "Recumbent Length/Standing Height",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "len_hi", "long_name": "Recumbent Length/Standing Height", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 lhfa_male = SimpleBCCGModel(
     loc=LookupTable(start=0, stop=1856, step=1, fp=_load("lhfa_male_loc")),
     scale=LookupTable(start=0, stop=1856, step=1, fp=_load("lhfa_male_scale")),
-    attrs={
-        "name": "len_hi",
-        "long_name": "Recumbent Length/Standing Height",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "len_hi", "long_name": "Recumbent Length/Standing Height", "units": "cm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 lhfa = GAMLSSModelByCondition(
     lhfa_female,
     lhfa_male,
-    attrs={
-        "name": "len_hi",
-        "long_name": "Recumbent Length/Standing Height",
-        "units": "cm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 ssfa_female = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_female_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_female_sigma")),
     nu=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_female_nu")),
-    attrs={
-        "name": "ss",
-        "long_name": "Subscapular Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "ss", "long_name": "Subscapular Skinfold", "units": "mm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 ssfa_male = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_male_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_male_sigma")),
     nu=LookupTable(start=91, stop=1856, step=1, fp=_load("ssfa_male_nu")),
-    attrs={
-        "name": "ss",
-        "long_name": "Subscapular Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "ss", "long_name": "Subscapular Skinfold", "units": "mm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 ssfa = GAMLSSModelByCondition(
     ssfa_female,
     ssfa_male,
-    attrs={
-        "name": "ss",
-        "long_name": "Subscapular Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 tsfa_female = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_female_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_female_sigma")),
     nu=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_female_nu")),
-    attrs={
-        "name": "ts",
-        "long_name": "Triceps Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "ts", "long_name": "Triceps Skinfold", "units": "mm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 tsfa_male = BCCGModel(
     mu=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_male_mu")),
     sigma=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_male_sigma")),
     nu=LookupTable(start=91, stop=1856, step=1, fp=_load("tsfa_male_nu")),
-    attrs={
-        "name": "ts",
-        "long_name": "Triceps Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "ts", "long_name": "Triceps Skinfold", "units": "mm"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 tsfa = GAMLSSModelByCondition(
     tsfa_female,
     tsfa_male,
-    attrs={
-        "name": "ts",
-        "long_name": "Triceps Skinfold",
-        "units": "mm",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 wfa_female = BCCGModel(
     mu=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_female_mu")),
     sigma=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_female_sigma")),
     nu=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_female_nu")),
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 wfa_male = BCCGModel(
     mu=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_male_mu")),
     sigma=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_male_sigma")),
     nu=LookupTable(start=0, stop=1856, step=1, fp=_load("wfa_male_nu")),
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 wfa = GAMLSSModelByCondition(
     wfa_female,
     wfa_male,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 wfh_female = BCCGModel(
     mu=LookupTable(start=65, stop=120, step=Fraction(1, 10), fp=_load("wfh_female_mu")),
     sigma=LookupTable(start=65, stop=120, step=Fraction(1, 10), fp=_load("wfh_female_sigma")),
     nu=-0.3833,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "height",
-        "x_long_name": "Standing Height",
-        "x_units": "cm",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "height", "long_name": "Standing Height", "units": "cm"},
 )
 wfh_male = BCCGModel(
     mu=LookupTable(start=65, stop=120, step=Fraction(1, 10), fp=_load("wfh_male_mu")),
     sigma=LookupTable(start=65, stop=120, step=Fraction(1, 10), fp=_load("wfh_male_sigma")),
     nu=-0.3521,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "height",
-        "x_long_name": "Standing Height",
-        "x_units": "cm",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "height", "long_name": "Standing Height", "units": "cm"},
 )
 wfh = GAMLSSModelByCondition(
     wfh_female,
     wfh_male,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "height",
-        "x_long_name": "Standing Height",
-        "x_units": "cm",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 wfl_female = BCCGModel(
     mu=LookupTable(start=45, stop=110, step=Fraction(1, 10), fp=_load("wfl_female_mu")),
     sigma=LookupTable(start=45, stop=110, step=Fraction(1, 10), fp=_load("wfl_female_sigma")),
     nu=-0.3833,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "length",
-        "x_long_name": "Recumbent Length",
-        "x_units": "cm",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "length", "long_name": "Recumbent Length", "units": "cm"},
 )
 wfl_male = BCCGModel(
     mu=LookupTable(start=45, stop=110, step=Fraction(1, 10), fp=_load("wfl_male_mu")),
     sigma=LookupTable(start=45, stop=110, step=Fraction(1, 10), fp=_load("wfl_male_sigma")),
     nu=-0.3521,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "length",
-        "x_long_name": "Recumbent Length",
-        "x_units": "cm",
-    },
+    attrs={"name": "weight", "long_name": "Weight", "units": "kg"},
+    x_attrs={"name": "length", "long_name": "Recumbent Length", "units": "cm"},
 )
 wfl = GAMLSSModelByCondition(
     wfl_female,
     wfl_male,
-    attrs={
-        "name": "weight",
-        "long_name": "Weight",
-        "units": "kg",
-        "x_name": "length",
-        "x_long_name": "Recumbent Length",
-        "x_units": "cm",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
