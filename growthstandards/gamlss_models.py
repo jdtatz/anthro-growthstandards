@@ -30,13 +30,8 @@ hcflh_female = BCPEModel(
     sigma=LogLink(-3.5834762072532387),
     nu=-0.5756035007094116,
     tau=LogLink(0.5563002460403006),
-    attrs={
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "len_hi",
-        "x_long_name": "Recumbent Length / Standing Height",
-        "x_units": "cm",
-    },
+    attrs={"long_name": "Head Circumference", "units": "cm"},
+    x_attrs={"name": "len_hi", "long_name": "Recumbent Length / Standing Height", "units": "cm"},
 )
 # DEPRECATED
 hcff = hcflh_female
@@ -51,29 +46,12 @@ hcflh_male = BCPEModel(
     sigma=LogLink(-3.6385438880994867),
     nu=-0.020559517437386845,
     tau=LogLink(0.4495271825950411),
-    attrs={
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "len_hi",
-        "x_long_name": "Recumbent Length / Standing Height",
-        "x_units": "cm",
-    },
+    attrs={"long_name": "Head Circumference", "units": "cm"},
+    x_attrs={"name": "len_hi", "long_name": "Recumbent Length / Standing Height", "units": "cm"},
 )
 # DEPRECATED
 hcmm = hcflh_male
-hcflh = GAMLSSModelByCondition(
-    hcflh_female,
-    hcflh_male,
-    attrs={
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "len_hi",
-        "x_long_name": "Recumbent Length / Standing Height",
-        "x_units": "cm",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
-)
+hcflh = GAMLSSModelByCondition(hcflh_female, hcflh_male, cond_attrs={"name": "is_female", "long_name": "sex = Female"})
 hcflh_xx = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-422.2940844051155,
@@ -85,13 +63,8 @@ hcflh_xx = BCPEModel(
     sigma=LogLink(-3.5738656336728867),
     nu=-0.28912191253351954,
     tau=LogLink(0.5328533922094477),
-    attrs={
-        "long_name": "Head Circumference",
-        "units": "cm",
-        "x_name": "len_hi",
-        "x_long_name": "Recumbent Length / Standing Height",
-        "x_units": "cm",
-    },
+    attrs={"long_name": "Head Circumference", "units": "cm"},
+    x_attrs={"name": "len_hi", "long_name": "Recumbent Length / Standing Height", "units": "cm"},
 )
 # DEPRECATED
 hcxx = hcflh_xx
@@ -106,7 +79,8 @@ cvfa_female = BCPEModel(
     sigma=LogLink(-1.615757113209806),
     nu=0.42546112691657323,
     tau=LogLink(0.17507009002314125),
-    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "CSF Volume", "units": "cm^3"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 csfFF = cvfa_female
@@ -121,23 +95,12 @@ cvfa_male = BCPEModel(
     sigma=LogLink(-1.5987646631876429),
     nu=0.6562282247254976,
     tau=LogLink(0.17380717231195147),
-    attrs={"long_name": "CSF Volume", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "CSF Volume", "units": "cm^3"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 csfMM = cvfa_male
-cvfa = GAMLSSModelByCondition(
-    cvfa_female,
-    cvfa_male,
-    attrs={
-        "long_name": "CSF Volume",
-        "units": "cm^3",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
-)
+cvfa = GAMLSSModelByCondition(cvfa_female, cvfa_male, cond_attrs={"name": "is_female", "long_name": "sex = Female"})
 bvfa_female = BCPEModel(
     mu=FractionalPolynomial(
         intercept=-32.40188886990359,
@@ -149,7 +112,8 @@ bvfa_female = BCPEModel(
     sigma=LogLink(-2.5310152523814264),
     nu=-0.4708322009246219,
     tau=LogLink(0.7144038214357605),
-    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue", "units": "cm^3"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 tissFF = bvfa_female
@@ -164,23 +128,12 @@ bvfa_male = BCPEModel(
     sigma=LogLink(-2.6171047897119526),
     nu=0.6989205425456295,
     tau=LogLink(0.40047791511800596),
-    attrs={"long_name": "Brain Tissue", "units": "cm^3", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue", "units": "cm^3"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 tissMM = bvfa_male
-bvfa = GAMLSSModelByCondition(
-    bvfa_female,
-    bvfa_male,
-    attrs={
-        "long_name": "Brain Tissue",
-        "units": "cm^3",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
-)
+bvfa = GAMLSSModelByCondition(bvfa_female, bvfa_male, cond_attrs={"name": "is_female", "long_name": "sex = Female"})
 ## FIXME: broken upstream
 _bv_cv_ratio_for_age_female = BCPEModel(
     mu=FractionalPolynomial(
@@ -193,7 +146,8 @@ _bv_cv_ratio_for_age_female = BCPEModel(
     sigma=LogLink(-1.6170309696939928),
     nu=0.05701029564202015,
     tau=LogLink(0.3832294345648013),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 _ratioF = _bv_cv_ratio_for_age_female
@@ -209,21 +163,15 @@ _bv_cv_ratio_for_age_male = BCPEModel(
     sigma=LogLink(-1.6422083676281767),
     nu=-0.7371007188630626,
     tau=LogLink(0.10333210663154822),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 _ratioM = _bv_cv_ratio_for_age_male
 _bv_cv_ratio_for_age = GAMLSSModelByCondition(
     _bv_cv_ratio_for_age_female,
     _bv_cv_ratio_for_age_male,
-    attrs={
-        "long_name": "Brain Tissue / CSF Volume Ratio",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )
 bv_cv_ratio_for_age_female = BCPEModel(
     mu=FractionalPolynomial(
@@ -236,7 +184,8 @@ bv_cv_ratio_for_age_female = BCPEModel(
     sigma=LogLink(-1.7177909182272781),
     nu=0.23164241283324605,
     tau=LogLink(0.45456869049681214),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 tcF = bv_cv_ratio_for_age_female
@@ -251,21 +200,13 @@ bv_cv_ratio_for_age_male = BCPEModel(
     sigma=LogLink(-1.7492290015068284),
     nu=0.019907631818795388,
     tau=LogLink(0.29597479412370803),
-    attrs={"long_name": "Brain Tissue / CSF Volume Ratio", "x_name": "age", "x_long_name": "Age", "x_units": "days"},
+    attrs={"long_name": "Brain Tissue / CSF Volume Ratio"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 tcM = bv_cv_ratio_for_age_male
 bv_cv_ratio_for_age = GAMLSSModelByCondition(
-    bv_cv_ratio_for_age_female,
-    bv_cv_ratio_for_age_male,
-    attrs={
-        "long_name": "Brain Tissue / CSF Volume Ratio",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    bv_cv_ratio_for_age_female, bv_cv_ratio_for_age_male, cond_attrs={"name": "is_female", "long_name": "sex = Female"}
 )
 cv_icv_prop_for_age_female = BCPEModel(
     mu=PSpline(
@@ -302,12 +243,8 @@ cv_icv_prop_for_age_female = BCPEModel(
     sigma=LogLink(-1.8580057025189702),
     nu=-0.05880935174072106,
     tau=LogLink(0.49534771358580737),
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 ciratioF = cv_icv_prop_for_age_female
@@ -346,26 +283,13 @@ cv_icv_prop_for_age_male = BCPEModel(
     sigma=LogLink(-1.8971241624545456),
     nu=0.15514658132713416,
     tau=LogLink(0.3371065157124078),
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 ciratioM = cv_icv_prop_for_age_male
 cv_icv_prop_for_age = GAMLSSModelByCondition(
-    cv_icv_prop_for_age_female,
-    cv_icv_prop_for_age_male,
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cv_icv_prop_for_age_female, cv_icv_prop_for_age_male, cond_attrs={"name": "is_female", "long_name": "sex = Female"}
 )
 cv_icv_prop_for_age_beta_female = BetaModel(
     mu=LogitLink(
@@ -434,12 +358,8 @@ cv_icv_prop_for_age_beta_female = BetaModel(
             spline_degree=3,
         )
     ),
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 ciratioF_beta = cv_icv_prop_for_age_beta_female
@@ -510,24 +430,13 @@ cv_icv_prop_for_age_beta_male = BetaModel(
             spline_degree=3,
         )
     ),
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-    },
+    attrs={"long_name": "CSF Volume / Intracranial Volume Proportion"},
+    x_attrs={"name": "age", "long_name": "Age", "units": "days"},
 )
 # DEPRECATED
 ciratioM_beta = cv_icv_prop_for_age_beta_male
 cv_icv_prop_for_age_beta = GAMLSSModelByCondition(
     cv_icv_prop_for_age_beta_female,
     cv_icv_prop_for_age_beta_male,
-    attrs={
-        "long_name": "CSF Volume / Intracranial Volume Proportion",
-        "x_name": "age",
-        "x_long_name": "Age",
-        "x_units": "days",
-        "cond_name": "is_female",
-        "cond_long_name": "sex = Female",
-    },
+    cond_attrs={"name": "is_female", "long_name": "sex = Female"},
 )

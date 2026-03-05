@@ -129,8 +129,6 @@ for p in sorted(table_dir.glob("*.xlsx")):
         else:
             assert c_name == "h"
     index_attrs = index_attr_map[index_name]
-    attrs = {**v_attrs, **{f"x_{k}": v for k, v in index_attrs.items()}}
-    assert len(attrs) == len(v_attrs) + len(index_attrs)
 
     x = np.asarray(df.index)
     mu = unique_scalar_or_array(df["M"])
@@ -150,14 +148,16 @@ for p in sorted(table_dir.glob("*.xlsx")):
         model = SimpleBCCGModel(
             loc=scalar_or_lookuptable(x, mu),
             scale=scalar_or_lookuptable(x, mu * sigma),
-            attrs=attrs,
+            attrs=v_attrs,
+            x_attrs=index_attrs,
         )
     else:
         model = BCCGModel(
             mu=scalar_or_lookuptable(x, mu),
             sigma=scalar_or_lookuptable(x, sigma),
             nu=scalar_or_lookuptable(x, nu),
-            attrs=attrs,
+            attrs=v_attrs,
+            x_attrs=index_attrs,
         )
     print(f"{std_name}_{sex} = {model}")
     models[f"{std_name}_{sex}"] = model
@@ -186,6 +186,7 @@ for std_name in sorted(std_model_names):
     f_model = models[f"{std_name}_female"]
     m_model = models[f"{std_name}_male"]
     assert f_model.attrs == m_model.attrs
+    assert f_model.x_attrs == m_model.x_attrs
     std_models[std_name] = (f_model, m_model)
     all_model_names.append(std_name)
     all_model_names.append(f"{std_name}_female")
@@ -234,11 +235,12 @@ with open("growthstandards/who_models.py", "w") as f:
                     sval = str(param)
                 fprint(f"    {p}={sval},")
             fprint(f"    attrs={model.attrs!r},")
+            fprint(f"    x_attrs={model.x_attrs!r},")
             fprint(")")
-        comb_attrs = {**f_model.attrs, "cond_name": "is_female", "cond_long_name": "sex = Female"}
+        cond_attrs = {"name": "is_female", "long_name": "sex = Female"}
         fprint(f"{std_name} = GAMLSSModelByCondition(")
         fprint(f"    {std_name}_female,")
         fprint(f"    {std_name}_male,")
-        fprint(f"    attrs={comb_attrs!r},")
+        fprint(f"    cond_attrs={cond_attrs!r},")
         fprint(")")
 np.savez_compressed("growthstandards/who_model_params.npz", allow_pickle=False, **npz)

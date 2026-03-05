@@ -48,6 +48,9 @@ class GAMLSSModel(ABC):
         cls._distr = distr
         cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
 
+    attrs: dict[str, Any]
+    x_attrs: dict[str, Any]
+
     @property
     @abstractmethod
     def _param_names(self) -> tuple[str, ...]: ...
@@ -261,6 +264,7 @@ class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
     loc: GAMLSSParam
     scale: GAMLSSParam
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -290,6 +294,7 @@ class BCCGModel(GAMLSSModel, distr=BCCG):
     sigma: GAMLSSParam
     nu: GAMLSSParam
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -309,6 +314,7 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
     nu: GAMLSSParam
     tau: GAMLSSParam
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -326,6 +332,7 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
     mu: GAMLSSParam
     sigma: GAMLSSParam
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -352,11 +359,15 @@ class CompoundGAMLSSModel:
     # TODO: multiple marginal models?
     marginal_model: GAMLSSModel
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self):
-        self.attrs |= {k: v for k, v in self.cond_model.attrs.items() if not k.startswith("x_")} | {
-            k: v for k, v in self.marginal_model.attrs.items() if k.startswith("x_")
-        }
+        for k, v in self.cond_model.attrs.items():
+            if k not in self.attrs:
+                self.attrs[k] = v
+        for k, v in self.marginal_model.x_attrs.items():
+            if k not in self.x_attrs:
+                self.x_attrs[k] = v
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -477,6 +488,18 @@ class GAMLSSModelByCondition:
     model1: GAMLSSModel
     model2: GAMLSSModel
     attrs: dict[str, Any] = field(default_factory=dict)
+    x_attrs: dict[str, Any] = field(default_factory=dict)
+    cond_attrs: dict[str, Any] = field(default_factory=dict)
+
+    def __post_init__(self):
+        for k in set(self.model1.attrs.keys()) & set(self.model2.attrs.keys()):
+            # FIXME: equality check can raise Exception
+            if k not in self.attrs and self.model1.attrs[k] == self.model2.attrs[k]:
+                self.attrs[k] = self.model1.attrs[k]
+        for k in set(self.model1.x_attrs.keys()) & set(self.model2.x_attrs.keys()):
+            # FIXME: equality check can raise Exception
+            if k not in self.x_attrs and self.model1.x_attrs[k] == self.model2.x_attrs[k]:
+                self.x_attrs[k] = self.model1.x_attrs[k]
 
     @property
     def _param_names(self) -> tuple[str, ...]:
