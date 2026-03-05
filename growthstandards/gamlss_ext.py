@@ -478,16 +478,14 @@ class GAMLSSModelByCondition:
     model2: GAMLSSModel
     attrs: dict[str, Any] = field(default_factory=dict)
 
-    def __post_init__(self):
-        if self.model1._distr is not self.model2._distr:
-            raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
-
     @property
     def _param_names(self) -> tuple[str, ...]:
         return self.model1._param_names
 
     @abstractmethod
     def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+        if self.model1._distr is not self.model2._distr:
+            raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
         ## TODO: use `apply_where` when it accepts tuple output
         # return apply_where(cond, (x,), self.model1._interpolate_params, self.model2._interpolate_params, xp=np)
         params1 = self.model1._interpolate_params(x)
