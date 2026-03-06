@@ -9,6 +9,7 @@ dependencies = [
     "numpy >= 2.0",
     "scipy",
     "array-api-extra",
+    "typing_extensions >= 4.10",
     "xarray",
     "xarray-einstats",
     "zarr >= 3.0",
@@ -29,9 +30,13 @@ line-length = 120
 [tool.isort]
 line-length = 120
 profile = "black"
+extra_standard_library = ["typing_extensions"]
 
 [tool.ruff]
 line-length = 120
+
+[tool.ruff.lint.isort]
+extra-standard-library = ["typing_extensions"]
 
 [tool.ruff.lint]
 select = [

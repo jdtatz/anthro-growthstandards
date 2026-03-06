@@ -3,7 +3,8 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from fractions import Fraction
 from math import lcm
-from typing import Any, Optional
+from typing import Optional
+from typing_extensions import TypedDict
 
 import numpy as np
 import numpy.typing as npt
@@ -18,6 +19,12 @@ from scipy.optimize.elementwise import find_root
 from .bcs_ext.scipy_ext import BCCG, BCPE
 
 type GAMLSSParam = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
+
+
+class Attributes(TypedDict, total=False, closed=False):
+    name: str
+    long_name: str
+    units: str
 
 
 def _interpolate(x: npt.ArrayLike, p: GAMLSSParam):
@@ -48,8 +55,8 @@ class GAMLSSModel(ABC):
         cls._distr = distr
         cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
 
-    attrs: dict[str, Any]
-    x_attrs: dict[str, Any]
+    attrs: Attributes
+    x_attrs: Attributes
 
     @property
     @abstractmethod
@@ -263,8 +270,8 @@ class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
 
     loc: GAMLSSParam
     scale: GAMLSSParam
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -293,8 +300,8 @@ class BCCGModel(GAMLSSModel, distr=BCCG):
     mu: GAMLSSParam
     sigma: GAMLSSParam
     nu: GAMLSSParam
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -313,8 +320,8 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
     sigma: GAMLSSParam
     nu: GAMLSSParam
     tau: GAMLSSParam
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -331,8 +338,8 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
 class BetaModel(GAMLSSModel, distr=stats.beta):
     mu: GAMLSSParam
     sigma: GAMLSSParam
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
 
     @property
     def _param_names(self) -> tuple[str, ...]:
@@ -358,8 +365,8 @@ class CompoundGAMLSSModel:
     cond_model: GAMLSSModel
     # TODO: multiple marginal models?
     marginal_model: GAMLSSModel
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
 
     def __post_init__(self):
         for k, v in self.cond_model.attrs.items():
@@ -487,9 +494,9 @@ class CompoundGAMLSSModel:
 class GAMLSSModelByCondition:
     model1: GAMLSSModel
     model2: GAMLSSModel
-    attrs: dict[str, Any] = field(default_factory=dict)
-    x_attrs: dict[str, Any] = field(default_factory=dict)
-    cond_attrs: dict[str, Any] = field(default_factory=dict)
+    attrs: Attributes = field(default_factory=dict)
+    x_attrs: Attributes = field(default_factory=dict)
+    cond_attrs: Attributes = field(default_factory=dict)
 
     def __post_init__(self):
         for k in set(self.model1.attrs.keys()) & set(self.model2.attrs.keys()):
