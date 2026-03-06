@@ -5,6 +5,21 @@ import numpy as np
 from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
 from .who_models import lhfa_female, lhfa_male, wfh_female, wfh_male, wfl_female, wfl_male
 
+__all__ = [
+    "hefa",
+    "hefa_female",
+    "hefa_male",
+    "lefa",
+    "lefa_female",
+    "lefa_male",
+    "wfhe",
+    "wfhe_female",
+    "wfhe_male",
+    "wfle",
+    "wfle_female",
+    "wfle_male",
+]
+
 
 def _shift(lt: LookupTable, ds: int | Fraction, /):
     return LookupTable(
