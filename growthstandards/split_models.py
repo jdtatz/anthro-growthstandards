@@ -1,6 +1,8 @@
 from .gamlss_ext import GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
 from .who_models import lhfa_female, lhfa_male
 
+__all__ = ["hfa", "hfa_female", "hfa_male", "lfa", "lfa_female", "lfa_male"]
+
 ## split lhfa into lfa and hfa
 
 assert isinstance(lhfa_female.loc, LookupTable) and lhfa_female.loc.xp[731] == 731
