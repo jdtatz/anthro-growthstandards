@@ -413,7 +413,7 @@ class CompoundGAMLSSModel:
             _integrand, a, b, args=(x, v), log=log, maxlevel=maxlevel, minlevel=minlevel, atol=atol, rtol=rtol
         )
         # TODO: return other info?
-        return res
+        return res.integral
 
     def _iroot(
         self,
@@ -430,14 +430,14 @@ class CompoundGAMLSSModel:
         bfn: Callable[[npt.ArrayLike, npt.ArrayLike], npt.NDArray] = getattr(self.cond_model, bfn)
 
         def _inner(v, x, q):
-            return self._integrate(ifn, log, x, v, **integrate_kwargs).integral - q
+            return self._integrate(ifn, log, x, v, **integrate_kwargs) - q
 
         a, b = self.cond_model._domain()
         min_q = bfn(a, q)
         max_q = bfn(b, q)
         res = find_root(_inner, (min_q, max_q), args=(x, q), tolerances=tolerances, maxiter=maxiter)
         # TODO: return other info?
-        return res
+        return res.x
 
     ##
 
