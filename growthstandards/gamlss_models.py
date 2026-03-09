@@ -1,4 +1,5 @@
-from .gamlss_ext import BCPEModel, BetaModel, FractionalPolynomial, GAMLSSModelByCondition, LogitLink, LogLink, PSpline
+from .gamlss_ext import BCPEModel, BetaModel, GAMLSSModelByCondition
+from .gamlss_params import FractionalPolynomial, LogitLink, LogLink, PSpline
 
 __all__ = [
     "csfFF",

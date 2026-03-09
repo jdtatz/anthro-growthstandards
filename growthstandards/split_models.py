@@ -1,4 +1,5 @@
-from .gamlss_ext import GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
+from .gamlss_ext import GAMLSSModelByCondition, SimpleBCCGModel
+from .gamlss_params import LookupTable
 from .who_models import lhfa_female, lhfa_male
 
 __all__ = ["hfa", "hfa_female", "hfa_male", "lfa", "lfa_female", "lfa_male"]

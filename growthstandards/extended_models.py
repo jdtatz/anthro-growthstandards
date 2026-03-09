@@ -2,7 +2,8 @@ from fractions import Fraction
 
 import numpy as np
 
-from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
+from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, SimpleBCCGModel
+from .gamlss_params import LookupTable
 from .who_models import lhfa_female, lhfa_male, wfh_female, wfh_male, wfl_female, wfl_male
 
 __all__ = [

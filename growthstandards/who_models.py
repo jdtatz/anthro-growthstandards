@@ -3,7 +3,8 @@ from fractions import Fraction
 
 import numpy as np
 
-from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, LookupTable, SimpleBCCGModel
+from .gamlss_ext import BCCGModel, GAMLSSModelByCondition, SimpleBCCGModel
+from .gamlss_params import LookupTable
 
 __all__ = [
     "acfa",
