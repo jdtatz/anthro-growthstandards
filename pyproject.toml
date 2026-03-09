@@ -65,12 +65,11 @@ select = [
 ]
 ignore = [
     "F401",    # unused-import
-    "UP045",   # non-pep604-annotation-optional
     "RUF001",  # ambiguous-unicode-character-string
     "RUF002",  # ambiguous-unicode-character-docstring
     "RUF003",  # ambiguous-unicode-character-comment
-    "PLC0415", # import-outside-top-level
     "PLR0913", # too-many-arguments
+    "PLR2004", # magic-value-comparison
 
     # These are enforced by, or incompatible with, the ruff formatter:
     "E203", # whitespace-before-punctuation
@@ -78,15 +77,21 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
+"growthstandards/__init__.py" = [
+    "F403", # undefined-local-with-import-star
+]
 "growthstandards/xr_stats_ext.py" = [
     "FBT",
-    "B905", # zip-without-explicit-strict
+    "B905",    # zip-without-explicit-strict
+    "UP045",   # non-pep604-annotation-optional
+    "PLC0415", # import-outside-top-level
 ]
 "growthstandards/bcs_ext/scipy_ext.py" = [
     "FBT003", # boolean-positional-value-in-call
 ]
 "growthstandards/bcs_ext/tfp_jax_ext.py" = [
     "FBT",
+    "PLC0415", # import-outside-top-level
     "PLE0101", # return-in-init
     "PLR1704", # redefined-argument-from-local
 ]

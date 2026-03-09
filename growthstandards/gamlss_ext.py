@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Optional
 from typing_extensions import TypedDict
 
 import numpy as np
@@ -36,7 +35,7 @@ class GAMLSSModel(ABC):
     def __init_subclass__(
         cls,
         distr: stats.rv_continuous,
-        rv_type: Optional[type["stats._distribution_infrastructure.ContinuousDistribution"]] = None,
+        rv_type: type["stats._distribution_infrastructure.ContinuousDistribution"] | None = None,
     ):
         cls._distr = distr
         cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
