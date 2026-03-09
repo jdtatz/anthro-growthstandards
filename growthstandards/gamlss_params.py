@@ -10,7 +10,14 @@ import numpy.typing as npt
 import scipy
 from scipy import interpolate
 
-type GAMLSSParam = int | float | Callable[[npt.ArrayLike], npt.ArrayLike]
+
+class CallableGAMLSSParam(Protocol):
+    domain: tuple[int | float | Fraction, int | float | Fraction]
+
+    def __call__(self, x: npt.ArrayLike, /) -> npt.ArrayLike: ...
+
+
+type GAMLSSParam = int | float | CallableGAMLSSParam
 
 
 def _interpolate(x: npt.ArrayLike, p: GAMLSSParam):
@@ -21,7 +28,7 @@ def _param_domain(p: GAMLSSParam) -> None | tuple[int | float | Fraction, int | 
     return None if isinstance(p, (int, float)) or not hasattr(p, "domain") else p.domain
 
 
-class GAMLSSLinkFunction(ABC):
+class LinkFunction(ABC):
     def __init__(self, inner: GAMLSSParam):
         self.inner = inner
 
@@ -40,12 +47,12 @@ class GAMLSSLinkFunction(ABC):
         return self.forward(_interpolate(x, self.inner))
 
 
-class LogLink(GAMLSSLinkFunction):
+class LogLink(LinkFunction):
     def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
         return np.exp(value)
 
 
-class LogitLink(GAMLSSLinkFunction):
+class LogitLink(LinkFunction):
     def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
         return scipy.special.expit(value)
 
