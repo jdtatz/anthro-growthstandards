@@ -32,41 +32,14 @@ def _merge_param_domains(*ps: GAMLSSParam) -> tuple[int | float, int | float]:
 
 
 class GAMLSSModel(ABC):
-    def __init_subclass__(
-        cls,
-        distr: stats.rv_continuous,
-        rv_type: type["stats._distribution_infrastructure.ContinuousDistribution"] | None = None,
-    ):
-        cls._distr = distr
-        cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
-
     attrs: Attributes
     x_attrs: Attributes
 
-    @property
     @abstractmethod
-    def _param_names(self) -> tuple[str, ...]: ...
+    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous: ...
+
     @abstractmethod
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]: ...
-
-    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
-        return dict(zip(self._param_names, self._interpolate_params(x), strict=True))
-
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
-        return self._distr(**self._interpolate_param_dict(x))
-
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
-        params = self._interpolate_param_dict(x)
-        loc = params.pop("loc", None)
-        scale = params.pop("scale", None)
-        rv = self._rv_type(**params)
-        if loc is not None and scale is not None:
-            return loc + scale * rv
-        if loc is not None:
-            return loc + rv
-        if scale is not None:
-            return scale * rv
-        return rv
+    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution": ...
 
     @abstractmethod
     def _domain(self) -> tuple[int | float, int | float]: ...
@@ -110,9 +83,44 @@ class GAMLSSModel(ABC):
         return self.interpolate_rv(x).ilogccdf(logp)
 
 
+class _BaseGAMLSSModel(GAMLSSModel):
+    def __init_subclass__(
+        cls,
+        distr: stats.rv_continuous,
+        rv_type: type["stats._distribution_infrastructure.ContinuousDistribution"] | None = None,
+    ):
+        cls._distr = distr
+        cls._rv_type = stats.make_distribution(distr) if rv_type is None else rv_type
+
+    @property
+    @abstractmethod
+    def _param_names(self) -> tuple[str, ...]: ...
+    @abstractmethod
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]: ...
+
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
+        return dict(zip(self._param_names, self._interpolate_params(x), strict=True))
+
+    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
+        return self._distr(**self._interpolate_param_dict(x))
+
+    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        params = self._interpolate_param_dict(x)
+        loc = params.pop("loc", None)
+        scale = params.pop("scale", None)
+        rv = self._rv_type(**params)
+        if loc is not None and scale is not None:
+            return loc + scale * rv
+        if loc is not None:
+            return loc + rv
+        if scale is not None:
+            return scale * rv
+        return rv
+
+
 ## FIXME: Use a better name. Would `UnitaryBCCGModel` be correct?
 @dataclass
-class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
+class SimpleBCCGModel(_BaseGAMLSSModel, distr=stats.truncnorm):
     """For Y ∼ BCS(μ, σ, 𝜈; r), if 𝜈 = 1 then Y has a truncated symmetric distribution with parameters μ and μσ and support (0, ∞)."""
 
     loc: GAMLSSParam
@@ -143,7 +151,7 @@ class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
 
 
 @dataclass
-class BCCGModel(GAMLSSModel, distr=BCCG):
+class BCCGModel(_BaseGAMLSSModel, distr=BCCG):
     mu: GAMLSSParam
     sigma: GAMLSSParam
     nu: GAMLSSParam
@@ -162,7 +170,7 @@ class BCCGModel(GAMLSSModel, distr=BCCG):
 
 
 @dataclass
-class BCPEModel(GAMLSSModel, distr=BCPE):
+class BCPEModel(_BaseGAMLSSModel, distr=BCPE):
     mu: GAMLSSParam
     sigma: GAMLSSParam
     nu: GAMLSSParam
@@ -182,7 +190,7 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
 
 
 @dataclass
-class BetaModel(GAMLSSModel, distr=stats.beta):
+class BetaModel(_BaseGAMLSSModel, distr=stats.beta):
     mu: GAMLSSParam
     sigma: GAMLSSParam
     attrs: Attributes = field(default_factory=dict)
@@ -208,7 +216,7 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
 
 # WIP
 @dataclass
-class CompoundGAMLSSModel:
+class CompoundGAMLSSModel(GAMLSSModel):
     cond_model: GAMLSSModel
     # TODO: multiple marginal models?
     marginal_model: GAMLSSModel
@@ -238,6 +246,9 @@ class CompoundGAMLSSModel:
 
     def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
         raise NotImplementedError
+
+    def _domain(self) -> tuple[int | float, int | float]:
+        return self.marginal_model._domain()
 
     def _integrate(
         self,
@@ -354,10 +365,13 @@ class GAMLSSModelByCondition:
 
     @property
     def _param_names(self) -> tuple[str, ...]:
+        assert isinstance(self.model1, _BaseGAMLSSModel)
         return self.model1._param_names
 
     @abstractmethod
     def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]:
+        assert isinstance(self.model1, _BaseGAMLSSModel)
+        assert isinstance(self.model2, _BaseGAMLSSModel)
         if self.model1._distr is not self.model2._distr:
             raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
         ## TODO: use `apply_where` when it accepts tuple output
@@ -370,11 +384,13 @@ class GAMLSSModelByCondition:
         return dict(zip(self._param_names, self._interpolate_params(cond, x), strict=True))
 
     def interpolate_distr(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> stats.rv_continuous:
+        assert isinstance(self.model1, _BaseGAMLSSModel)
         return self.model1._distr(**self._interpolate_param_dict(cond, x))
 
     def interpolate_rv(
         self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /
     ) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        assert isinstance(self.model1, _BaseGAMLSSModel)
         params = self._interpolate_param_dict(cond, x)
         loc = params.pop("loc", None)
         scale = params.pop("scale", None)
