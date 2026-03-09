@@ -284,14 +284,3 @@ class BCPE_gen(_BCS_gen):
 
 
 BCPE = BCPE_gen(name="BCPE")
-
-
-# FIXME: upstream
-if stats._continuous_distns.gennorm_gen._munp is stats.rv_continuous._munp:
-
-    def _gennorm_munp(self, n, beta):
-        if int(n) % 2 == 0:
-            return np.exp(sc.gammaln((n + 1) / beta) - sc.gammaln(1 / beta))
-        return 0.0
-
-    stats._continuous_distns.gennorm_gen._munp = _gennorm_munp
