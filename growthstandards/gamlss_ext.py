@@ -9,8 +9,6 @@ from typing_extensions import TypedDict
 import numpy as np
 import numpy.typing as npt
 import scipy.special
-import xarray as xr
-import xarray_einstats.stats as xr_stats
 from array_api_extra import apply_where
 from scipy import interpolate, stats
 from scipy.integrate import tanhsinh
@@ -82,10 +80,6 @@ class GAMLSSModel(ABC):
         if scale is not None:
             return scale * rv
         return rv
-
-    def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
-        params = xr.apply_ufunc(self._interpolate_params, x)
-        return xr_stats.XrContinuousRV(self._distr, *params)
 
     @abstractmethod
     def _domain(self) -> tuple[int | float, int | float]: ...
@@ -390,9 +384,6 @@ class CompoundGAMLSSModel:
         raise NotImplementedError
 
     def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
-        raise NotImplementedError
-
-    def interpolate_xr_rv(self, x: xr.DataArray) -> xr_stats.XrContinuousRV:
         raise NotImplementedError
 
     def _integrate(
