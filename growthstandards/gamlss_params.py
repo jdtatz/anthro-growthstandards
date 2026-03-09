@@ -14,7 +14,8 @@ type _RealArrayLike = int | float | npt.NDArray[np.integer] | npt.NDArray[np.flo
 
 
 class CallableGAMLSSParam(Protocol):
-    domain: tuple[int | float | Fraction, int | float | Fraction]
+    @property
+    def domain(self) -> tuple[int | float | Fraction, int | float | Fraction]: ...
 
     def __call__(self, x: npt.ArrayLike, /) -> _RealArrayLike: ...
 
