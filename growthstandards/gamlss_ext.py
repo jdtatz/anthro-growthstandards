@@ -11,7 +11,7 @@ from scipy.integrate import tanhsinh
 from scipy.optimize.elementwise import find_root
 
 from .bcs_ext.scipy_ext import BCCG, BCPE
-from .gamlss_params import GAMLSSParam, LookupTable, _interpolate, _param_domain
+from .gamlss_params import GAMLSSParam, LookupTable, _interpolate, _param_domain, _RealArrayLike
 
 
 class Attributes(TypedDict, total=False, closed=False):
@@ -47,9 +47,9 @@ class GAMLSSModel(ABC):
     @abstractmethod
     def _param_names(self) -> tuple[str, ...]: ...
     @abstractmethod
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]: ...
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]: ...
 
-    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
         return dict(zip(self._param_names, self._interpolate_params(x), strict=True))
 
     def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
@@ -124,7 +124,7 @@ class SimpleBCCGModel(GAMLSSModel, distr=stats.truncnorm):
     def _param_names(self) -> tuple[str, ...]:
         return "a", "b", "loc", "scale"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /):
         loc, scale = _interpolate_tuple(x, self.loc, self.scale)
         # NOTE: `a, b = (lb - loc) / scale, (ub - loc) / scale`
         # lb, ub = 0, np.inf
@@ -154,7 +154,7 @@ class BCCGModel(GAMLSSModel, distr=BCCG):
     def _param_names(self) -> tuple[str, ...]:
         return "mu", "sigma", "nu"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /):
         return _interpolate_tuple(x, self.mu, self.sigma, self.nu)
 
     def _domain(self) -> tuple[int | float, int | float]:
@@ -174,7 +174,7 @@ class BCPEModel(GAMLSSModel, distr=BCPE):
     def _param_names(self) -> tuple[str, ...]:
         return "mu", "sigma", "nu", "beta"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /):
         return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau)
 
     def _domain(self) -> tuple[int | float, int | float]:
@@ -192,7 +192,7 @@ class BetaModel(GAMLSSModel, distr=stats.beta):
     def _param_names(self) -> tuple[str, ...]:
         return "a", "b"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /):
         mu, sigma = _interpolate_tuple(x, self.mu, self.sigma)
         s2 = sigma**2
         # var = s2 * mu * (1 - mu)
@@ -227,10 +227,10 @@ class CompoundGAMLSSModel:
     def _param_names(self) -> tuple[str, ...]:
         raise NotImplementedError
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]:
         raise NotImplementedError
 
-    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
         raise NotImplementedError
 
     def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
@@ -357,7 +357,7 @@ class GAMLSSModelByCondition:
         return self.model1._param_names
 
     @abstractmethod
-    def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[npt.ArrayLike, ...]:
+    def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]:
         if self.model1._distr is not self.model2._distr:
             raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
         ## TODO: use `apply_where` when it accepts tuple output
@@ -366,7 +366,7 @@ class GAMLSSModelByCondition:
         params2 = self.model2._interpolate_params(x)
         return tuple(np.where(cond, p1, p2) for p1, p2 in zip(params1, params2, strict=True))
 
-    def _interpolate_param_dict(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> dict[str, npt.ArrayLike]:
+    def _interpolate_param_dict(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
         return dict(zip(self._param_names, self._interpolate_params(cond, x), strict=True))
 
     def interpolate_distr(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> stats.rv_continuous:

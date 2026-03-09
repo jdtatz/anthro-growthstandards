@@ -10,11 +10,13 @@ import numpy.typing as npt
 import scipy
 from scipy import interpolate
 
+type _RealArrayLike = int | float | npt.NDArray[np.integer] | npt.NDArray[np.floating]
+
 
 class CallableGAMLSSParam(Protocol):
     domain: tuple[int | float | Fraction, int | float | Fraction]
 
-    def __call__(self, x: npt.ArrayLike, /) -> npt.ArrayLike: ...
+    def __call__(self, x: npt.ArrayLike, /) -> _RealArrayLike: ...
 
 
 type GAMLSSParam = int | float | CallableGAMLSSParam
@@ -41,19 +43,19 @@ class LinkFunction(ABC):
         return _param_domain(self.inner)
 
     @abstractmethod
-    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike: ...
+    def forward(self, value: npt.ArrayLike) -> _RealArrayLike: ...
 
     def __call__(self, x: npt.ArrayLike, /):
         return self.forward(_interpolate(x, self.inner))
 
 
 class LogLink(LinkFunction):
-    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
+    def forward(self, value: npt.ArrayLike):
         return np.exp(value)
 
 
 class LogitLink(LinkFunction):
-    def forward(self, value: npt.ArrayLike) -> npt.ArrayLike:
+    def forward(self, value: npt.ArrayLike):
         return scipy.special.expit(value)
 
 
@@ -62,8 +64,8 @@ class LookupTable:
     start: int | Fraction
     stop: int | Fraction
     step: int | Fraction
-    fp: npt.ArrayLike
-    xp: npt.ArrayLike = field(init=False, repr=False)
+    fp: npt.NDArray[np.integer] | npt.NDArray[np.floating]
+    xp: npt.NDArray[np.int64] | npt.NDArray[np.float64] = field(init=False, repr=False)
 
     def _parts(self):
         parts = (self.start, self.stop, self.step)
