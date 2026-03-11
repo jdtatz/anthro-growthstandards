@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from functools import partial
 from typing_extensions import TypedDict
 
 import numpy as np
@@ -409,40 +410,49 @@ class GAMLSSModelByCondition:
         # l2, u2 = self.model2._domain()
         raise NotImplementedError
 
+    def _apply(self, fn: str, cond: npt.NDArray[np.bool_], *args: npt.ArrayLike, **kwargs) -> npt.NDArray:
+        return apply_where(
+            cond,
+            args,
+            partial(getattr(self.model1, fn), **kwargs),
+            partial(getattr(self.model2, fn), **kwargs),
+            xp=np,
+        )
+
     ## Convenience Methods
 
     def mean(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x,), self.model1.mean, self.model2.mean, xp=np)
+        return self._apply("mean", cond, x)
 
     def median(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x,), self.model1.median, self.model2.median, xp=np)
+        return self._apply("median", cond, x)
 
     def pdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.pdf, self.model2.pdf, xp=np)
+        return self._apply("pdf", cond, x, v)
 
     def logpdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.logpdf, self.model2.logpdf, xp=np)
+        return self._apply("logpdf", cond, x, v)
 
     def cdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.cdf, self.model2.cdf, xp=np)
+        return self._apply("cdf", cond, x, v)
 
     def icdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, q), self.model1.icdf, self.model2.icdf, xp=np)
+        return self._apply("icdf", cond, x, q)
 
     def ccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.ccdf, self.model2.ccdf, xp=np)
+        return self._apply("ccdf", cond, x, v)
 
     def iccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, q), self.model1.iccdf, self.model2.iccdf, xp=np)
+        return self._apply("iccdf", cond, x, q)
 
     def logcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.logcdf, self.model2.logcdf, xp=np)
+        return self._apply("logcdf", cond, x, v)
 
     def ilogcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, logp), self.model1.ilogcdf, self.model2.ilogcdf, xp=np)
+        return self._apply("ilogcdf", cond, x, logp)
 
     def logccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, v), self.model1.logccdf, self.model2.logccdf, xp=np)
+        return self._apply("logccdf", cond, x, v)
 
     def ilogccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return apply_where(cond, (x, logp), self.model1.ilogccdf, self.model2.ilogccdf, xp=np)
+        return self._apply("ilogccdf", cond, x, logp)
