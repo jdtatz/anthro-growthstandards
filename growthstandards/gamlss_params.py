@@ -17,14 +17,14 @@ class CallableGAMLSSParam(Protocol):
     @property
     def domain(self) -> tuple[int | float | Fraction, int | float | Fraction]: ...
 
-    def __call__(self, x: npt.ArrayLike, /) -> _RealArrayLike: ...
+    def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> _RealArrayLike: ...
 
 
 type GAMLSSParam = int | float | CallableGAMLSSParam
 
 
-def _interpolate(x: npt.ArrayLike, p: GAMLSSParam):
-    return p if isinstance(p, (int, float)) else p(x)
+def _interpolate(x: npt.ArrayLike, p: GAMLSSParam, *, extrapolate: bool):
+    return p if isinstance(p, (int, float)) else p(x, extrapolate=extrapolate)
 
 
 def _param_domain(p: GAMLSSParam) -> None | tuple[int | float | Fraction, int | float | Fraction]:
@@ -46,8 +46,8 @@ class LinkFunction(ABC):
     @abstractmethod
     def forward(self, value: npt.ArrayLike) -> _RealArrayLike: ...
 
-    def __call__(self, x: npt.ArrayLike, /):
-        return self.forward(_interpolate(x, self.inner))
+    def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool):
+        return self.forward(_interpolate(x, self.inner, extrapolate=extrapolate))
 
 
 class LogLink(LinkFunction):
@@ -89,9 +89,11 @@ class LookupTable:
     def domain(self) -> tuple[int | Fraction, int | Fraction]:
         return self.start, self.stop
 
-    def __call__(self, x: npt.ArrayLike, /):
+    def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool):
         x = np.asanyarray(x)
-        return np.interp(x, self.xp, self.fp)
+        # TODO: `numpy.interp` doesn't extrapolate, it just returns the respective endpoint
+        nan_or_none = None if extrapolate else np.nan
+        return np.interp(x, self.xp, self.fp, left=nan_or_none, right=nan_or_none)
 
     def __getitem__(self, key: slice):
         if not isinstance(key, slice):
@@ -120,12 +122,15 @@ class FractionalPolynomial:
     inv_scale: float = field(init=False, repr=False)
 
     def __post_init__(self):
+        assert len(self.coefficients) > 0
         assert len(self.coefficients) == len(self.fpowers)
         x_min, x_max = self.domain
         self.inv_scale = 10 ** int(-np.trunc(np.log10(x_max - x_min)))
 
-    def __call__(self, x: npt.ArrayLike, /):
+    def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool):
         x = np.asanyarray(x)
+        if not extrapolate:
+            x[(x < self.domain[0]) | (self.domain[1] < x)] = np.nan
         if self.shift:
             x = x + self.shift
         x = x * self.inv_scale
@@ -149,7 +154,7 @@ class PSpline:
     slope: float
     spline_coefficients: tuple[float, ...]
     spline_degree: int
-    spline: Callable = field(init=False, repr=False)
+    spline: interpolate.BSpline = field(init=False, repr=False)
 
     def __post_init__(self):
         ndx = len(self.spline_coefficients) - self.spline_degree
@@ -160,6 +165,6 @@ class PSpline:
 
         self.spline = interpolate.BSpline(knots, self.spline_coefficients, self.spline_degree)
 
-    def __call__(self, x: npt.ArrayLike, /):
+    def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool):
         x = np.asanyarray(x)
-        return self.intercept + self.slope * x + self.spline(x)
+        return self.intercept + self.slope * x + self.spline(x, extrapolate=extrapolate)

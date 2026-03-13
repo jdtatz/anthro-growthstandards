@@ -22,8 +22,8 @@ class Attributes(TypedDict, total=False, closed=False):
     units: str
 
 
-def _interpolate_tuple(x: npt.ArrayLike, *ps: GAMLSSParam):
-    return tuple(_interpolate(x, p) for p in ps)
+def _interpolate_tuple(x: npt.ArrayLike, *ps: GAMLSSParam, extrapolate: bool):
+    return tuple(_interpolate(x, p, extrapolate=extrapolate) for p in ps)
 
 
 def _merge_param_domains(*ps: GAMLSSParam) -> tuple[int | float, int | float]:
@@ -38,83 +38,91 @@ class GAMLSSModel(ABC):
     x_attrs: Attributes
 
     @abstractmethod
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous: ...
+    def interpolate_distr(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> stats.rv_continuous: ...
 
     @abstractmethod
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution": ...
+    def interpolate_rv(
+        self, x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> "stats._distribution_infrastructure.ContinuousDistribution": ...
 
     @abstractmethod
     def _domain(self) -> tuple[int | float, int | float]: ...
 
     ## Convenience Methods
 
-    def support(self, x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
-        return self.interpolate_rv(x).support()
+    def support(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> tuple[npt.NDArray, npt.NDArray]:
+        return self.interpolate_rv(x, extrapolate=extrapolate).support()
 
-    def sample(self, x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
-        return self.interpolate_rv(x).sample(shape, rng=rng)
+    def sample(self, x: npt.ArrayLike, /, shape=(), *, extrapolate: bool = False, rng=None) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).sample(shape, rng=rng)
 
     def moment(
-        self, x: npt.ArrayLike, /, order: int = 1, kind: Literal["raw", "central", "standardized"] = "raw"
+        self,
+        x: npt.ArrayLike,
+        /,
+        *,
+        extrapolate: bool = False,
+        order: int = 1,
+        kind: Literal["raw", "central", "standardized"] = "raw",
     ) -> npt.NDArray:
-        return self.interpolate_rv(x).moment(order, kind)
+        return self.interpolate_rv(x, extrapolate=extrapolate).moment(order, kind)
 
-    def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).mean()
+    def mean(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).mean()
 
-    def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).median()
+    def median(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).median()
 
-    def mode(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).mode()
+    def mode(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).mode()
 
-    def variance(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).variance()
+    def variance(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).variance()
 
-    def standard_deviation(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).standard_deviation()
+    def standard_deviation(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).standard_deviation()
 
-    def skewness(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).skewness()
+    def skewness(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).skewness()
 
-    def kurtosis(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).kurtosis()
+    def kurtosis(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).kurtosis()
 
-    def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).pdf(v)
+    def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).pdf(v)
 
-    def logpdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).logpdf(v)
+    def logpdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).logpdf(v)
 
-    def cdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).cdf(v)
+    def cdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).cdf(v)
 
-    def icdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).icdf(q)
+    def icdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).icdf(q)
 
-    def ccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).ccdf(v)
+    def ccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).ccdf(v)
 
-    def iccdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).iccdf(q)
+    def iccdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).iccdf(q)
 
-    def logcdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).logcdf(v)
+    def logcdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).logcdf(v)
 
-    def ilogcdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).ilogcdf(logp)
+    def ilogcdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).ilogcdf(logp)
 
-    def logccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).logccdf(v)
+    def logccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).logccdf(v)
 
-    def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).ilogccdf(logp)
+    def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).ilogccdf(logp)
 
-    def logentropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).logentropy()
+    def logentropy(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).logentropy()
 
-    def entropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
-        return self.interpolate_rv(x).entropy()
+    def entropy(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self.interpolate_rv(x, extrapolate=extrapolate).entropy()
 
 
 class _BaseGAMLSSModel(GAMLSSModel):
@@ -130,16 +138,18 @@ class _BaseGAMLSSModel(GAMLSSModel):
     @abstractmethod
     def _param_names(self) -> tuple[str, ...]: ...
     @abstractmethod
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]: ...
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> tuple[_RealArrayLike, ...]: ...
 
-    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
-        return dict(zip(self._param_names, self._interpolate_params(x), strict=True))
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> dict[str, _RealArrayLike]:
+        return dict(zip(self._param_names, self._interpolate_params(x, extrapolate=extrapolate), strict=True))
 
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
-        return self._distr(**self._interpolate_param_dict(x))
+    def interpolate_distr(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> stats.rv_continuous:
+        return self._distr(**self._interpolate_param_dict(x, extrapolate=extrapolate))
 
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
-        params = self._interpolate_param_dict(x)
+    def interpolate_rv(
+        self, x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> "stats._distribution_infrastructure.ContinuousDistribution":
+        params = self._interpolate_param_dict(x, extrapolate=extrapolate)
         loc = params.pop("loc", None)
         scale = params.pop("scale", None)
         rv = self._rv_type(**params)
@@ -166,8 +176,8 @@ class SimpleBCCGModel(_BaseGAMLSSModel, distr=stats.truncnorm):
     def _param_names(self) -> tuple[str, ...]:
         return "a", "b", "loc", "scale"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /):
-        loc, scale = _interpolate_tuple(x, self.loc, self.scale)
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool):
+        loc, scale = _interpolate_tuple(x, self.loc, self.scale, extrapolate=extrapolate)
         # NOTE: `a, b = (lb - loc) / scale, (ub - loc) / scale`
         # lb, ub = 0, np.inf
         a = -loc / scale
@@ -176,8 +186,8 @@ class SimpleBCCGModel(_BaseGAMLSSModel, distr=stats.truncnorm):
 
     ## TODO: Is the only benefit to `truncnorm` over `truncate(Normal(...))` moment computation?
     ## TODO: Is `truncate(Normal(...), lb=0)` better numerically than `truncnorm(a=-loc/scale, ...)`?
-    # def interpolate_rv(self, x: npt.ArrayLike, /):
-    #     loc, scale = _interpolate_tuple(x, self.loc, self.scale)
+    # def interpolate_rv(self, x: npt.ArrayLike, /, *, extrapolate: bool = False):
+    #     loc, scale = _interpolate_tuple(x, self.loc, self.scale, extrapolate=extrapolate)
     #     return stats.truncate(stats.Normal(mu=loc, sigma=scale), lb=0)
 
     def _domain(self) -> tuple[int | float, int | float]:
@@ -196,8 +206,8 @@ class BCCGModel(_BaseGAMLSSModel, distr=BCCG):
     def _param_names(self) -> tuple[str, ...]:
         return "mu", "sigma", "nu"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /):
-        return _interpolate_tuple(x, self.mu, self.sigma, self.nu)
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool):
+        return _interpolate_tuple(x, self.mu, self.sigma, self.nu, extrapolate=extrapolate)
 
     def _domain(self) -> tuple[int | float, int | float]:
         return _merge_param_domains(self.mu, self.sigma, self.nu)
@@ -216,8 +226,8 @@ class BCPEModel(_BaseGAMLSSModel, distr=BCPE):
     def _param_names(self) -> tuple[str, ...]:
         return "mu", "sigma", "nu", "beta"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /):
-        return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau)
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool):
+        return _interpolate_tuple(x, self.mu, self.sigma, self.nu, self.tau, extrapolate=extrapolate)
 
     def _domain(self) -> tuple[int | float, int | float]:
         return _merge_param_domains(self.mu, self.sigma, self.nu, self.tau)
@@ -234,8 +244,8 @@ class BetaModel(_BaseGAMLSSModel, distr=stats.beta):
     def _param_names(self) -> tuple[str, ...]:
         return "a", "b"
 
-    def _interpolate_params(self, x: npt.ArrayLike, /):
-        mu, sigma = _interpolate_tuple(x, self.mu, self.sigma)
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool):
+        mu, sigma = _interpolate_tuple(x, self.mu, self.sigma, extrapolate=extrapolate)
         s2 = sigma**2
         # var = s2 * mu * (1 - mu)
         # nu = mu * (1 - mu) / var - 1
@@ -269,16 +279,18 @@ class CompoundGAMLSSModel(GAMLSSModel):
     def _param_names(self) -> tuple[str, ...]:
         raise NotImplementedError
 
-    def _interpolate_params(self, x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]:
+    def _interpolate_params(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> tuple[_RealArrayLike, ...]:
         raise NotImplementedError
 
-    def _interpolate_param_dict(self, x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
+    def _interpolate_param_dict(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> dict[str, _RealArrayLike]:
         raise NotImplementedError
 
-    def interpolate_distr(self, x: npt.ArrayLike, /) -> stats.rv_continuous:
+    def interpolate_distr(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> stats.rv_continuous:
         raise NotImplementedError
 
-    def interpolate_rv(self, x: npt.ArrayLike, /) -> "stats._distribution_infrastructure.ContinuousDistribution":
+    def interpolate_rv(
+        self, x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> "stats._distribution_infrastructure.ContinuousDistribution":
         raise NotImplementedError
 
     def _domain(self) -> tuple[int | float, int | float]:
@@ -291,6 +303,7 @@ class CompoundGAMLSSModel(GAMLSSModel):
         x: npt.ArrayLike,
         v: npt.ArrayLike,
         *,
+        extrapolate: bool,
         maxlevel: int | None = None,
         minlevel: int = 2,
         atol: float | None = None,
@@ -300,9 +313,9 @@ class CompoundGAMLSSModel(GAMLSSModel):
 
         def _integrand(m, x, v):
             if log:
-                return self.marginal_model.logpdf(x, m) + ifn(m, v)
+                return self.marginal_model.logpdf(x, m, extrapolate=extrapolate) + ifn(m, v, extrapolate=False)
             else:
-                return self.marginal_model.pdf(x, m) * ifn(m, v)
+                return self.marginal_model.pdf(x, m, extrapolate=extrapolate) * ifn(m, v, extrapolate=False)
 
         a, b = self.cond_model._domain()
         res = tanhsinh(
@@ -319,6 +332,7 @@ class CompoundGAMLSSModel(GAMLSSModel):
         x: npt.ArrayLike,
         q: npt.ArrayLike,
         *,
+        extrapolate: bool,
         tolerances: dict | None = None,
         maxiter: int | None = None,
         **integrate_kwargs,
@@ -326,86 +340,92 @@ class CompoundGAMLSSModel(GAMLSSModel):
         bfn: Callable[[npt.ArrayLike, npt.ArrayLike], npt.NDArray] = getattr(self.cond_model, bfn)
 
         def _inner(v, x, q):
-            return self._integrate(ifn, log, x, v, **integrate_kwargs) - q
+            return self._integrate(ifn, log, x, v, extrapolate=extrapolate, **integrate_kwargs) - q
 
         a, b = self.cond_model._domain()
-        min_q = bfn(a, q)
-        max_q = bfn(b, q)
+        min_q = bfn(a, q, extrapolate=False)
+        max_q = bfn(b, q, extrapolate=False)
         res = find_root(_inner, (min_q, max_q), args=(x, q), tolerances=tolerances, maxiter=maxiter)
         # TODO: return other info?
         return res.x
 
     ##
 
-    def support(self, x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
+    def support(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> tuple[npt.NDArray, npt.NDArray]:
         raise NotImplementedError
 
-    def sample(self, x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
+    def sample(self, x: npt.ArrayLike, /, shape=(), *, extrapolate: bool = False, rng=None) -> npt.NDArray:
         raise NotImplementedError
 
     def moment(
-        self, x: npt.ArrayLike, /, order: int = 1, kind: Literal["raw", "central", "standardized"] = "raw"
+        self,
+        x: npt.ArrayLike,
+        /,
+        *,
+        extrapolate: bool = False,
+        order: int = 1,
+        kind: Literal["raw", "central", "standardized"] = "raw",
     ) -> npt.NDArray:
         raise NotImplementedError
 
-    def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def mean(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def median(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         # TODO: icdf, iccdf, ilogcdf, or ilogccdf?
-        return self.icdf(x, 0.5)
+        return self.icdf(x, 0.5, extrapolate=extrapolate)
 
-    def mode(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def mode(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def variance(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def variance(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def standard_deviation(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def standard_deviation(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def skewness(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def skewness(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def kurtosis(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def kurtosis(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
     # ruff: disable[FBT003]
 
-    def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("pdf", False, x, v)
+    def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("pdf", False, x, v, extrapolate=extrapolate)
 
-    def logpdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("logpdf", True, x, v)
+    def logpdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("logpdf", True, x, v, extrapolate=extrapolate)
 
-    def cdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("cdf", False, x, v)
+    def cdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("cdf", False, x, v, extrapolate=extrapolate)
 
-    def icdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self._iroot("icdf", "cdf", False, x, q)
+    def icdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._iroot("icdf", "cdf", False, x, q, extrapolate=extrapolate)
 
-    def ccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("ccdf", False, x, v)
+    def ccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("ccdf", False, x, v, extrapolate=extrapolate)
 
-    def iccdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self._iroot("iccdf", "ccdf", False, x, q)
+    def iccdf(self, x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._iroot("iccdf", "ccdf", False, x, q, extrapolate=extrapolate)
 
-    def logcdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("logcdf", True, x, v)
+    def logcdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("logcdf", True, x, v, extrapolate=extrapolate)
 
-    def ilogcdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self._iroot("ilogcdf", "logcdf", True, x, logp)
+    def ilogcdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._iroot("ilogcdf", "logcdf", True, x, logp, extrapolate=extrapolate)
 
-    def logccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._integrate("logccdf", True, x, v)
+    def logccdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._integrate("logccdf", True, x, v, extrapolate=extrapolate)
 
-    def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self._iroot("ilogccdf", "logccdf", True, x, logp)
+    def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._iroot("ilogccdf", "logccdf", True, x, logp, extrapolate=extrapolate)
 
-    def logentropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def logentropy(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
-    def entropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+    def entropy(self, x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
         raise NotImplementedError
 
     # ruff: enable[FBT003]
@@ -435,29 +455,35 @@ class GAMLSSModelByCondition:
         return self.model1._param_names
 
     @abstractmethod
-    def _interpolate_params(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[_RealArrayLike, ...]:
+    def _interpolate_params(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool
+    ) -> tuple[_RealArrayLike, ...]:
         assert isinstance(self.model1, _BaseGAMLSSModel)
         assert isinstance(self.model2, _BaseGAMLSSModel)
         if self.model1._distr is not self.model2._distr:
             raise TypeError(f"(model1 ~ {self.model1._distr.name}) != (model2 ~ {self.model2._distr.name})")
         ## TODO: use `apply_where` when it accepts tuple output
         # return apply_where(cond, (x,), self.model1._interpolate_params, self.model2._interpolate_params, xp=np)
-        params1 = self.model1._interpolate_params(x)
-        params2 = self.model2._interpolate_params(x)
+        params1 = self.model1._interpolate_params(x, extrapolate=extrapolate)
+        params2 = self.model2._interpolate_params(x, extrapolate=extrapolate)
         return tuple(np.where(cond, p1, p2) for p1, p2 in zip(params1, params2, strict=True))
 
-    def _interpolate_param_dict(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> dict[str, _RealArrayLike]:
-        return dict(zip(self._param_names, self._interpolate_params(cond, x), strict=True))
+    def _interpolate_param_dict(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool
+    ) -> dict[str, _RealArrayLike]:
+        return dict(zip(self._param_names, self._interpolate_params(cond, x, extrapolate=extrapolate), strict=True))
 
-    def interpolate_distr(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> stats.rv_continuous:
+    def interpolate_distr(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> stats.rv_continuous:
         assert isinstance(self.model1, _BaseGAMLSSModel)
-        return self.model1._distr(**self._interpolate_param_dict(cond, x))
+        return self.model1._distr(**self._interpolate_param_dict(cond, x, extrapolate=extrapolate))
 
     def interpolate_rv(
-        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False
     ) -> "stats._distribution_infrastructure.ContinuousDistribution":
         assert isinstance(self.model1, _BaseGAMLSSModel)
-        params = self._interpolate_param_dict(cond, x)
+        params = self._interpolate_param_dict(cond, x, extrapolate=extrapolate)
         loc = params.pop("loc", None)
         scale = params.pop("scale", None)
         rv = self.model1._rv_type(**params)
@@ -475,23 +501,29 @@ class GAMLSSModelByCondition:
         # l2, u2 = self.model2._domain()
         raise NotImplementedError
 
-    def _apply(self, fn: str, cond: npt.NDArray[np.bool_], *args: npt.ArrayLike, **kwargs) -> npt.NDArray:
+    def _apply(
+        self, fn: str, cond: npt.NDArray[np.bool_], *args: npt.ArrayLike, extrapolate: bool, **kwargs
+    ) -> npt.NDArray:
         return apply_where(
             cond,
             args,
-            partial(getattr(self.model1, fn), **kwargs),
-            partial(getattr(self.model2, fn), **kwargs),
+            partial(getattr(self.model1, fn), extrapolate=extrapolate, **kwargs),
+            partial(getattr(self.model2, fn), extrapolate=extrapolate, **kwargs),
             xp=np,
         )
 
     ## Convenience Methods
 
-    def support(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
+    def support(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> tuple[npt.NDArray, npt.NDArray]:
         ## TODO: use `apply_where` when it accepts tuple output
-        return self.interpolate_rv(cond, x).support()
+        return self.interpolate_rv(cond, x, extrapolate=extrapolate).support()
 
-    def sample(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
-        return self._apply("sample", cond, x, shape=shape, rng=rng)
+    def sample(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, shape=(), *, extrapolate: bool = False, rng=None
+    ) -> npt.NDArray:
+        return self._apply("sample", cond, x, shape=shape, extrapolate=extrapolate, rng=rng)
 
     def moment(
         self,
@@ -500,62 +532,86 @@ class GAMLSSModelByCondition:
         /,
         order: int = 1,
         kind: Literal["raw", "central", "standardized"] = "raw",
+        *,
+        extrapolate: bool = False,
     ) -> npt.NDArray:
-        return self._apply("moment", cond, x, order=order, kind=kind)
+        return self._apply("moment", cond, x, order=order, kind=kind, extrapolate=extrapolate)
 
-    def mean(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("mean", cond, x)
+    def mean(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("mean", cond, x, extrapolate=extrapolate)
 
-    def median(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("median", cond, x)
+    def median(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("median", cond, x, extrapolate=extrapolate)
 
-    def mode(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("mode", cond, x)
+    def mode(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("mode", cond, x, extrapolate=extrapolate)
 
-    def variance(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("variance", cond, x)
+    def variance(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("variance", cond, x, extrapolate=extrapolate)
 
-    def standard_deviation(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("standard_deviation", cond, x)
+    def standard_deviation(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("standard_deviation", cond, x, extrapolate=extrapolate)
 
-    def skewness(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("skewness", cond, x)
+    def skewness(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("skewness", cond, x, extrapolate=extrapolate)
 
-    def kurtosis(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("kurtosis", cond, x)
+    def kurtosis(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("kurtosis", cond, x, extrapolate=extrapolate)
 
-    def pdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("pdf", cond, x, v)
+    def pdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("pdf", cond, x, v, extrapolate=extrapolate)
 
-    def logpdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("logpdf", cond, x, v)
+    def logpdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("logpdf", cond, x, v, extrapolate=extrapolate)
 
-    def cdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("cdf", cond, x, v)
+    def cdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("cdf", cond, x, v, extrapolate=extrapolate)
 
-    def icdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("icdf", cond, x, q)
+    def icdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("icdf", cond, x, q, extrapolate=extrapolate)
 
-    def ccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("ccdf", cond, x, v)
+    def ccdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("ccdf", cond, x, v, extrapolate=extrapolate)
 
-    def iccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("iccdf", cond, x, q)
+    def iccdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, q: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("iccdf", cond, x, q, extrapolate=extrapolate)
 
-    def logcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("logcdf", cond, x, v)
+    def logcdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("logcdf", cond, x, v, extrapolate=extrapolate)
 
-    def ilogcdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("ilogcdf", cond, x, logp)
+    def ilogcdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("ilogcdf", cond, x, logp, extrapolate=extrapolate)
 
-    def logccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("logccdf", cond, x, v)
+    def logccdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("logccdf", cond, x, v, extrapolate=extrapolate)
 
-    def ilogccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("ilogccdf", cond, x, logp)
+    def ilogccdf(
+        self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /, *, extrapolate: bool = False
+    ) -> npt.NDArray:
+        return self._apply("ilogccdf", cond, x, logp, extrapolate=extrapolate)
 
-    def logentropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("logentropy", cond, x)
+    def logentropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("logentropy", cond, x, extrapolate=extrapolate)
 
-    def entropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
-        return self._apply("entropy", cond, x)
+    def entropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, *, extrapolate: bool = False) -> npt.NDArray:
+        return self._apply("entropy", cond, x, extrapolate=extrapolate)
