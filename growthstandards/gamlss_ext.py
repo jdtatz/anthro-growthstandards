@@ -2,6 +2,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from functools import partial
+from typing import Literal
 from typing_extensions import TypedDict
 
 import numpy as np
@@ -47,11 +48,37 @@ class GAMLSSModel(ABC):
 
     ## Convenience Methods
 
+    def support(self, x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
+        return self.interpolate_rv(x).support()
+
+    def sample(self, x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
+        return self.interpolate_rv(x).sample(shape, rng=rng)
+
+    def moment(
+        self, x: npt.ArrayLike, /, order: int = 1, kind: Literal["raw", "central", "standardized"] = "raw"
+    ) -> npt.NDArray:
+        return self.interpolate_rv(x).moment(order, kind)
+
     def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
         return self.interpolate_rv(x).mean()
 
     def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
         return self.interpolate_rv(x).median()
+
+    def mode(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).mode()
+
+    def variance(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).variance()
+
+    def standard_deviation(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).standard_deviation()
+
+    def skewness(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).skewness()
+
+    def kurtosis(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).kurtosis()
 
     def pdf(self, x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
         return self.interpolate_rv(x).pdf(v)
@@ -82,6 +109,12 @@ class GAMLSSModel(ABC):
 
     def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
         return self.interpolate_rv(x).ilogccdf(logp)
+
+    def logentropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).logentropy()
+
+    def entropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        return self.interpolate_rv(x).entropy()
 
 
 class _BaseGAMLSSModel(GAMLSSModel):
@@ -304,12 +337,38 @@ class CompoundGAMLSSModel(GAMLSSModel):
 
     ##
 
+    def support(self, x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
+        raise NotImplementedError
+
+    def sample(self, x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
+        raise NotImplementedError
+
+    def moment(
+        self, x: npt.ArrayLike, /, order: int = 1, kind: Literal["raw", "central", "standardized"] = "raw"
+    ) -> npt.NDArray:
+        raise NotImplementedError
+
     def mean(self, x: npt.ArrayLike, /) -> npt.NDArray:
         raise NotImplementedError
 
     def median(self, x: npt.ArrayLike, /) -> npt.NDArray:
         # TODO: icdf, iccdf, ilogcdf, or ilogccdf?
         return self.icdf(x, 0.5)
+
+    def mode(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def variance(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def standard_deviation(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def skewness(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def kurtosis(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
 
     # ruff: disable[FBT003]
 
@@ -342,6 +401,12 @@ class CompoundGAMLSSModel(GAMLSSModel):
 
     def ilogccdf(self, x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
         return self._iroot("ilogccdf", "logccdf", True, x, logp)
+
+    def logentropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
+
+    def entropy(self, x: npt.ArrayLike, /) -> npt.NDArray:
+        raise NotImplementedError
 
     # ruff: enable[FBT003]
 
@@ -421,11 +486,43 @@ class GAMLSSModelByCondition:
 
     ## Convenience Methods
 
+    def support(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> tuple[npt.NDArray, npt.NDArray]:
+        ## TODO: use `apply_where` when it accepts tuple output
+        return self.interpolate_rv(cond, x).support()
+
+    def sample(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /, shape=(), *, rng=None) -> npt.NDArray:
+        return self._apply("sample", cond, x, shape=shape, rng=rng)
+
+    def moment(
+        self,
+        cond: npt.NDArray[np.bool_],
+        x: npt.ArrayLike,
+        /,
+        order: int = 1,
+        kind: Literal["raw", "central", "standardized"] = "raw",
+    ) -> npt.NDArray:
+        return self._apply("moment", cond, x, order=order, kind=kind)
+
     def mean(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
         return self._apply("mean", cond, x)
 
     def median(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
         return self._apply("median", cond, x)
+
+    def mode(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("mode", cond, x)
+
+    def variance(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("variance", cond, x)
+
+    def standard_deviation(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("standard_deviation", cond, x)
+
+    def skewness(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("skewness", cond, x)
+
+    def kurtosis(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("kurtosis", cond, x)
 
     def pdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, v: npt.ArrayLike, /) -> npt.NDArray:
         return self._apply("pdf", cond, x, v)
@@ -456,3 +553,9 @@ class GAMLSSModelByCondition:
 
     def ilogccdf(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, logp: npt.ArrayLike, /) -> npt.NDArray:
         return self._apply("ilogccdf", cond, x, logp)
+
+    def logentropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("logentropy", cond, x)
+
+    def entropy(self, cond: npt.NDArray[np.bool_], x: npt.ArrayLike, /) -> npt.NDArray:
+        return self._apply("entropy", cond, x)
