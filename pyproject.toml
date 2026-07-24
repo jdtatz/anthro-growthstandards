@@ -73,5 +73,6 @@ unfixable = ["F401"]
     "FBT",
     "PLC0415", # import-outside-top-level
     "PLE0101", # return-in-init
+    "PLR0917", # too-many-positional-arguments
     "PLR1704", # redefined-argument-from-local
 ]

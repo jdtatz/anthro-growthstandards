@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-from collections.abc import Callable
 from dataclasses import dataclass, field
 from fractions import Fraction
 from math import lcm
@@ -15,7 +14,7 @@ type _RealArrayLike = int | float | npt.NDArray[np.integer] | npt.NDArray[np.flo
 
 class CallableGAMLSSParam(Protocol):
     @property
-    def domain(self) -> tuple[int | float | Fraction, int | float | Fraction]: ...
+    def domain(self) -> tuple[int | float | Fraction, int | float | Fraction] | None: ...
 
     def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool) -> _RealArrayLike: ...
 
@@ -27,7 +26,7 @@ def _interpolate(x: npt.ArrayLike, p: GAMLSSParam, *, extrapolate: bool):
     return p if isinstance(p, (int, float)) else p(x, extrapolate=extrapolate)
 
 
-def _param_domain(p: GAMLSSParam) -> None | tuple[int | float | Fraction, int | float | Fraction]:
+def _param_domain(p: GAMLSSParam) -> tuple[int | float | Fraction, int | float | Fraction] | None:
     return None if isinstance(p, (int, float)) or not hasattr(p, "domain") else p.domain
 
 
@@ -40,7 +39,7 @@ class LinkFunction(ABC):
         return f"{name}({self.inner!r})"
 
     @property
-    def domain(self) -> None | tuple[int | float | Fraction, int | float | Fraction]:
+    def domain(self) -> tuple[int | float | Fraction, int | float | Fraction] | None:
         return _param_domain(self.inner)
 
     @abstractmethod
