@@ -5,10 +5,20 @@ import scipy.special as sc
 from scipy import stats
 from scipy.stats._distn_infrastructure import _ShapeInfo
 
-from .log_ext_ufunc import logsubexp
+try:
+    from scipy.special._ufuncs import _log1mexp as log1mexp
+except ImportError:
+    from scipy.special import log1mexp
 
-# LN_2 = np.log(2)
-LN_2 = 0.693147180559945309417232121458176568
+
+def logsubexp(x1, x2):
+    """log(exp(x1) - exp(x2))
+
+    References
+    ----------
+    [Maechler, Martin (2012). Accurately Computing log(1-exp(-|a|)).](https://cran.r-project.org/web/packages/Rmpfr/vignettes/log1mexp-note.pdf)
+    """
+    return x1 + log1mexp(x2 - x1)
 
 
 def bcs_logpdf(distr, y, mu, sigma, nu, *shape_params, **shape_kwds):
