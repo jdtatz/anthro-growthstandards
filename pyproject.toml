@@ -11,9 +11,6 @@ dependencies = [
     "scipy >= 1.16",
     "array-api-extra",
     "typing_extensions >= 4.10",
-    "xarray",
-    "xarray-einstats",
-    "zarr >= 3.0",
 ]
 dynamic = ["version"]
 
@@ -69,15 +66,6 @@ ignore = [
 unfixable = ["F401"]
 
 [tool.ruff.lint.per-file-ignores]
-"growthstandards/__init__.py" = [
-    "F403", # undefined-local-with-import-star
-]
-"growthstandards/xr_stats_ext.py" = [
-    "FBT",
-    "B905",    # zip-without-explicit-strict
-    "UP045",   # non-pep604-annotation-optional
-    "PLC0415", # import-outside-top-level
-]
 "growthstandards/bcs_ext/scipy_ext.py" = [
     "FBT003", # boolean-positional-value-in-call
 ]
