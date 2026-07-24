@@ -1,9 +1,10 @@
 [build-system]
-requires = ["setuptools", "setuptools-scm"]
+requires = ["setuptools>=80", "setuptools-scm[simple]>=9.2"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "growthstandards"
+authors = [{ name = "Julia Tatz", email = "julia.tatz@childrens.harvard.edu" }]
 requires-python = ">=3.12"
 dependencies = [
     "numpy >= 2.0",
@@ -20,16 +21,7 @@ dynamic = ["version"]
 tfp = ["tensorflow_probability[jax]"]
 
 [tool.setuptools]
-
-[tool.setuptools_scm]
-
-[tool.black]
-line-length = 120
-
-[tool.isort]
-line-length = 120
-profile = "black"
-extra_standard_library = ["typing_extensions"]
+packages = ["growthstandards"]
 
 [tool.ruff]
 line-length = 120
@@ -47,6 +39,8 @@ select = [
     "PL",
     # pyupgrade
     "UP",
+    # isort
+    "I",
     # Ruff-specific rules
     "RUF",
     # NumPy-specific rules
@@ -59,11 +53,8 @@ select = [
     "FBT",
     # flake8-simplify
     "SIM",
-    # isort
-    "I",
 ]
 ignore = [
-    "F401",    # unused-import
     "RUF001",  # ambiguous-unicode-character-string
     "RUF002",  # ambiguous-unicode-character-docstring
     "RUF003",  # ambiguous-unicode-character-comment
@@ -74,6 +65,8 @@ ignore = [
     "E203", # whitespace-before-punctuation
     "E501", # line-too-long
 ]
+# Disable fix for unused imports (`F401`).
+unfixable = ["F401"]
 
 [tool.ruff.lint.per-file-ignores]
 "growthstandards/__init__.py" = [
