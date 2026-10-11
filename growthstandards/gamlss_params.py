@@ -129,7 +129,7 @@ class FractionalPolynomial:
     def __call__(self, x: npt.ArrayLike, /, *, extrapolate: bool):
         x = np.asanyarray(x)
         if not extrapolate:
-            x[(x < self.domain[0]) | (self.domain[1] < x)] = np.nan
+            x = np.where((x < self.domain[0]) | (self.domain[1] < x), np.nan, x)
         if self.shift:
             x = x + self.shift
         x = x * self.inv_scale
