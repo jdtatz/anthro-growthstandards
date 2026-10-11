@@ -21,7 +21,7 @@ def _z_score(rv, *args: ArrayLike, log: bool, **kwargs):
     *rv_args, v = args
 
     return apply_where(
-        v >= rv.median(*rv_args),
+        v >= rv.median(*rv_args, **kwargs),
         args,
         partial(_ccdf_z_score, rv, log=log, **kwargs),
         partial(_cdf_z_score, rv, log=log, **kwargs),
