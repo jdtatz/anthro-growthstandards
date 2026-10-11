@@ -135,11 +135,14 @@ class FractionalPolynomial:
         x = x * self.inv_scale
 
         y = self.intercept
-        last = None
+        last = xp = None
         for c, p in zip(self.coefficients, self.fpowers, strict=True):
-            xp = np.log(x) if p == 0 else x**p
             if last == p:
                 xp *= np.log(x)
+            elif p == 0:
+                xp = np.log(x)
+            else:
+                xp = x**p
             y += c * xp
             last = p
         return y
